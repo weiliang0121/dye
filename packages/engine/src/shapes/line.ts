@@ -1,0 +1,33 @@
+import {BoundingBox} from '@dye/bounding';
+
+import {Shape} from '../core';
+
+export class LineShape extends Shape {
+  command: string = 'line';
+
+  x1: number = 0;
+  y1: number = 0;
+  x2: number = 1;
+  y2: number = 1;
+
+  from(x1: number, y1: number, x2: number, y2: number) {
+    this.x1 = x1;
+    this.y1 = y1;
+    this.x2 = x2;
+    this.y2 = y2;
+    this.d = `M${x1} ${y1} L${x2} ${y2}`;
+    this.p = null;
+    if (this.autoNeedUpdate) this.needUpdate = true;
+  }
+
+  path2d() {
+    if (!this.p) this.p = new Path2D(this.d);
+    return this.p;
+  }
+
+  box() {
+    const {x1, y1, x2, y2} = this;
+    this.boundingBox = BoundingBox.fromPoints(x1, y1, x2, y2);
+    return this.boundingBox;
+  }
+}

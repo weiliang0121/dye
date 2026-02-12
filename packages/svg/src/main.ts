@@ -1,1 +1,1 @@
-// @dye/svg - SVG rendering implementation
+export * from './renderer';

@@ -1,36 +1,34 @@
 {
   "name": "@dye/animation",
-  "version": "0.0.1",
-  "description": "Animation timeline and keyframe system for Dye",
+  "version": "0.0.0",
+  "author": "wei.liang",
   "type": "module",
-  "main": "dist/animation.cjs",
-  "module": "dist/animation.js",
-  "types": "types/main.d.ts",
+  "main": "dist/main.cjs",
+  "module": "dist/main.js",
+  "types": "dist/main.d.ts",
   "exports": {
     ".": {
-      "types": "./types/main.d.ts",
-      "import": "./dist/animation.js",
-      "require": "./dist/animation.cjs"
+      "types": "./dist/main.d.ts",
+      "import": "./dist/main.js",
+      "require": "./dist/main.cjs"
     }
   },
-  "files": [
-    "dist",
-    "types"
-  ],
-  "sideEffects": false,
   "scripts": {
-    "build": "vite build && tsc",
-    "dev": "vite build --watch"
+    "build": "tsup",
+    "dev": "tsup --watch"
   },
   "dependencies": {
     "@dye/ease": "workspace:^",
     "@dye/interpolate": "workspace:^",
     "@dye/util": "workspace:^",
-    "@dye/types": "workspace:^"
+    "@dye/types": "workspace:^",
+    "gl-matrix": "^3.4.4"
   },
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
   "publishConfig": {
     "access": "public"
-  },
-  "author": "wei.liang",
-  "license": "MIT"
+  }
 }

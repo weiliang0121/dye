@@ -1,1 +1,1 @@
-// @dye/gradient - Gradient processing
+export * from './gradient';

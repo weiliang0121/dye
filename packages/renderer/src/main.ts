@@ -1,1 +1,1 @@
-// @dye/renderer - Low-level renderer interface definitions
+export * from './renderer';

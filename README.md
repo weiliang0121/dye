@@ -54,7 +54,7 @@ pnpm format
 ## Tech Stack
 
 - **Package Manager**: pnpm workspace
-- **Build**: Vite (library mode) + TypeScript
+- **Build**: tsup + TypeScript
 - **Task Orchestration**: Turborepo
 - **Versioning**: Changesets
 - **Code Quality**: ESLint + Prettier, commitlint, husky + lint-staged

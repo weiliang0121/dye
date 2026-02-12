@@ -1,1 +1,13 @@
-// @dye/util - General utility functions
+export * from './normal';
+export * from './array';
+export * from './math';
+export * from './object';
+export * from './function';
+export * from './string';
+export * from './bisector';
+export * from './bin';
+export * from './quick-select';
+export * from './matrix';
+export * from './number';
+export * from './sort';
+export * from '@dye/types';

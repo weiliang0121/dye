@@ -1,8 +1,6 @@
 {
   "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "declarationDir": "types",
-    "rootDir": "src"
-  },
-  "include": ["src"]
+  "include": [
+    "src"
+  ]
 }

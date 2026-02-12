@@ -1,1 +1,2 @@
-// @dye/ease - Easing functions
+export * from './ease';
+export * from './linear';

@@ -1,1 +1,2 @@
-// @dye/bounding - Bounding box computation
+export * from './box';
+export * from './rect';

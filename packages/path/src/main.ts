@@ -1,1 +1,1 @@
-// @dye/path - 2D path building and parsing
+export * from './path';

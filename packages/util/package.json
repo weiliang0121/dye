@@ -1,33 +1,30 @@
 {
   "name": "@dye/util",
-  "version": "0.0.1",
-  "description": "General utility functions for Dye",
+  "version": "0.0.0",
+  "author": "wei.liang",
   "type": "module",
-  "main": "dist/util.cjs",
-  "module": "dist/util.js",
-  "types": "types/main.d.ts",
+  "main": "dist/main.cjs",
+  "module": "dist/main.js",
+  "types": "dist/main.d.ts",
   "exports": {
     ".": {
-      "types": "./types/main.d.ts",
-      "import": "./dist/util.js",
-      "require": "./dist/util.cjs"
+      "types": "./dist/main.d.ts",
+      "import": "./dist/main.js",
+      "require": "./dist/main.cjs"
     }
   },
-  "files": [
-    "dist",
-    "types"
-  ],
-  "sideEffects": false,
   "scripts": {
-    "build": "vite build && tsc",
-    "dev": "vite build --watch"
+    "build": "tsup",
+    "dev": "tsup --watch"
   },
   "dependencies": {
     "@dye/types": "workspace:^"
   },
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
   "publishConfig": {
     "access": "public"
-  },
-  "author": "wei.liang",
-  "license": "MIT"
+  }
 }
