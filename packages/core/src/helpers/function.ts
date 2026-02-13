@@ -1,5 +1,6 @@
 import type {GF} from '../types';
 
+/** 生成 UUID v4 */
 export const uid = (): string => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
     const r = (Math.random() * 16) | 0;
@@ -8,10 +9,13 @@ export const uid = (): string => {
   });
 };
 
+/** 生成 8 位短 UUID */
 export const uid8 = (): string => uid().slice(0, 8);
 
+/** 恒等函数，返回输入本身 */
 export const identity = <T>(x: T): T => x;
 
+/** 函数组合（从左到右依次执行） */
 export const compose = (...fns: GF[]): GF => {
   return x => fns.reduce((v, f) => f(v), x);
 };

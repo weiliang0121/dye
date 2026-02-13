@@ -5,6 +5,10 @@ import {AttributeTransform, ClipBoxTransform} from '../transforms';
 import type {BoundingBox} from '@dye/bounding';
 import type {ClipPath, GradientOptions, AO} from '@dye/core';
 
+/**
+ * 视觉属性容器，管理 fill/stroke/opacity/fontSize 等渲染属性。
+ * 支持属性动画（AttributeTransform）和裁剪动画（ClipBoxTransform）。
+ */
 export class Attributes {
   uid: string = uid8();
 
@@ -31,18 +35,21 @@ export class Attributes {
     return this.values[key];
   }
 
+  /** 从对象批量设置属性（替换全部） */
   from(attrs: AO) {
     this.values = attrs;
     if (this.autoNeedUpdate) this.needUpdate = true;
     return this;
   }
 
+  /** 合并属性（保留已有值，追加新值） */
   merge(attrs: AO) {
     Object.entries(attrs ?? {}).forEach(([key, value]) => (this.values[key] = value));
     if (this.autoNeedUpdate) this.needUpdate = true;
     return this;
   }
 
+  /** 关联渐变配置 */
   gradient(gradientOptions: GradientOptions) {
     this.gradientOptions = gradientOptions;
     if (isNil(this.gradientOptions.id)) this.gradientOptions.id = this.uid;
@@ -50,6 +57,7 @@ export class Attributes {
     return this;
   }
 
+  /** 关联裁剪路径 */
   clip(clipPath: ClipPath) {
     this.clipPath = clipPath;
     if (isNil(this.clipPath.id)) this.clipPath.id = this.uid;
@@ -62,12 +70,12 @@ export class Attributes {
     return this;
   }
 
+  /** 启用属性动画（可对 opacity/fill/stroke 等做插值动画） */
   useTransform() {
-    if (this.transform) return this;
-    this.transform = new AttributeTransform(this.values);
     return this;
   }
 
+  /** 启用裁剪框动画（lr/rl/tb/bt 方向的揭露动效） */
   useClipBoxTransform() {
     if (this.clipBoxTransform) return this;
     this.clip({id: this.uid, path: ''});

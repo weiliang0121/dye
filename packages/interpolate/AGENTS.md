@@ -21,8 +21,8 @@ Layer 2（依赖 `gl-matrix`、`@dye/core`）
 - `normalize(a, b)` → `(x: number) => number` — 数值归一化
 
 ### 颜色 (`color.ts`)
-- `interpolateColor(a, b)` → `(t: number) => string` — 支持 hex 和 rgb 格式
-- `interpolateColors(colors)` → `(t: number) => string` — 多色分段插值
+- `interpolateColor(a, b)` → `(t: number) => string` — 支持 hex 和 rgb 格式，预计算 RGB 差值
+- `interpolateColors(colors)` → `(t: number) => string` — 多色分段插值，内置 LRU 缓存（`MAX_CACHE_SIZE = 64`）避免重复创建插值器链
 
 ### 向量 (`vector.ts`)
 - `slerp(a, b)` → `(t: number) => vec2` — 球面线性插值
@@ -34,13 +34,17 @@ Layer 2（依赖 `gl-matrix`、`@dye/core`）
 - `interpolateMat2d(a, b)` → `(t: number) => mat2d` — 分解后插值（避免剪切）
 
 ### 通用 (`value.ts`)
-- `interpolateValue(a, b)` → `(t: number) => number | string` — 根据类型自动分派
+- `interpolateValue(a, b)` → `(t: number) => number | string` — 根据输入类型自动分派：
+  - `number, number` → 调用 `lerp`
+  - `string, string` → 调用 `interpolateColor`
+  - 类型不匹配 → 返回恒定函数 `() => a`
 
 ## 设计要点
 - 所有插值器均为**工厂模式**：调用返回一个 `(t: number) => value` 闭包
 - `t` 范围 `[0, 1]`，0 为起始值，1 为目标值
 - `interpolateMat2d` 先分解为 TRS，分别插值后重组（避免矩阵直接线性插值的畸变）
-- 颜色通过正则解析，在 RGB 空间线性插值后输出 hex
+- `normalize(a, b)` 除零保护：`b === a` 时返回 `() => isNaN(d) ? NaN : 0.5`
+- 颜色通过正则解析，在 RGB 空间线性插值后输出 hex；内部使用预构建的 256 元素 hex 查找表（`HEX_TABLE`）
 - 向量和矩阵插值器预分配输出对象，每次调用复用同一对象（零 GC）
 
 ## 命名规范

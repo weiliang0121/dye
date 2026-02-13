@@ -8,6 +8,18 @@ import {isHit} from '../core/canvas-hit';
 
 import type {AO, Point} from '@dye/core';
 
+/**
+ * 叶子节点（type=3），场景图中的可渲染单元。
+ * 每个 Node 持有一个 Shape（几何形状）和一个 Attributes（视觉属性）。
+ *
+ * @example
+ * ```ts
+ * const node = Node.create('circle', { fill: 'red', stroke: '#000' });
+ * node.shape.from(100, 200, 50); // cx, cy, r
+ * node.translate(10, 20);
+ * scene.add(node);
+ * ```
+ */
 export class Node extends Graphics {
   type: number = 3;
 
@@ -19,6 +31,11 @@ export class Node extends Graphics {
 
   #invertWorldMatrix: mat2d | null = null;
 
+  /**
+   * 创建指定类型的节点（推荐使用此工厂方法而非直接 new）
+   * @param type - 形状类型：'circle' | 'rect' | 'line' | 'path' | 'text' | 'image'
+   * @param values - 视觉属性（fill/stroke/opacity/fontSize 等）
+   */
   static create(type: string, values: AO = {}) {
     const shape = createShape(type);
     const attrs = new Attributes().from(values);
@@ -98,6 +115,11 @@ export class Node extends Graphics {
     return BoundingBox.fromPoints(minX, minY, maxX, maxY);
   }
 
+  /**
+   * 命中检测：将屏幕坐标通过逆世界矩阵变换为本地坐标，然后检测是否命中
+   * @param point - 场景坐标 [x, y]
+   * @returns 命中时返回自身，否则 undefined
+   */
   hit(point: Point) {
     if (!this.display || !this.pointerEvents) return;
     if (!this.#invertWorldMatrix) this.#invertWorldMatrix = mat2d.invert(mat2d.create(), this.worldMatrix)!;

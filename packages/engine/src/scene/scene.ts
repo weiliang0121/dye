@@ -7,6 +7,7 @@ import type {Mat2d, Point} from '@dye/core';
 import type {Node} from './node';
 import type {Layer} from './layer';
 
+/** 场景根节点（type=1），管理所有渲染层、提供命中检测和坐标映射 */
 export class Scene extends Graphics {
   type: number = 1;
   #queue: Node[] = [];
@@ -56,6 +57,7 @@ export class Scene extends Graphics {
     return this;
   }
 
+  /** 收集所有可渲染节点（type=3），按 ez 排序，带脏标记缓存 */
   getQueue(): Node[] {
     if (this.dirty) {
       const queue: Node[] = [];
@@ -101,6 +103,10 @@ export class Scene extends Graphics {
     return undefined;
   }
 
+  /**
+   * 屏幕坐标 → 场景坐标（通过逆 worldMatrix 变换，缓存逆矩阵）
+   * @param point - 画布像素坐标 [x, y]
+   */
   position(point: Point): Point {
     if (!this.#invertWorldMatrix) this.#invertWorldMatrix = mat2d.invert(mat2d.create(), this.worldMatrix)!;
     return vec2.transformMat2d(vec2.create(), point, this.#invertWorldMatrix) as Point;

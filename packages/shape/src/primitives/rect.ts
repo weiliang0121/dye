@@ -1,12 +1,15 @@
 import type {Path} from '@dye/path';
 import {isNum, isUndef} from '@dye/core';
 
+/** 矩形配置 */
 export interface RectOptions {
   x: number;
   y: number;
   width: number;
   height: number;
+  /** 圆角 X 半径（数字为统一圆角，4元素数组为独立圆角 [tl, tr, br, bl]） */
   rx?: number | number[];
+  /** 圆角 Y 半径 */
   ry?: number | number[];
 }
 
@@ -35,6 +38,7 @@ export const createRectRounded = (path: Path, {x, y, width, height, rx, ry}: Rec
   path.Z();
 };
 
+/** 生成矩形路径（自动根据 rx/ry 选择普通或圆角矩形） */
 export const createRect = (path: Path, options: RectOptions) => {
   const {rx, ry} = options;
   if (!isUndef(rx) && rx !== 0 && !isUndef(ry) && ry !== 0) createRectRounded(path, options);

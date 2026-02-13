@@ -14,6 +14,20 @@ export interface AppConfig extends RendererConfig {
   autoResize?: boolean;
 }
 
+/**
+ * Dye 引擎顶层控制器，负责场景、渲染层、事件和插件的统一管理。
+ *
+ * @example
+ * ```ts
+ * const app = new App({ width: 800, height: 600 });
+ * app.mount(document.getElementById('container')!);
+ *
+ * const circle = Node.create('circle', { fill: '#f00' });
+ * circle.shape.from(400, 300, 50);
+ * app.scene.add(circle);
+ * app.render();
+ * ```
+ */
 export class App {
   cfg: AppConfig;
   scene: Scene;
@@ -35,6 +49,9 @@ export class App {
     return this.#mounted;
   }
 
+  /**
+   * @param cfg - 引擎配置（width/height/layers/autoResize 等）
+   */
   constructor(cfg: Partial<AppConfig> = {}) {
     this.cfg = cfg as AppConfig;
     this.scene = new Scene();
@@ -58,7 +75,10 @@ export class App {
     this.observer = new EventObserver(this.scene, this.#eventLayer.renderer);
   }
 
-  /** 挂载到 DOM 容器 */
+  /**
+   * 挂载到 DOM 容器，初始化渲染层并绑定事件。必须在 render() 之前调用。
+   * @param container - 目标 DOM 元素，引擎会在其中创建 Canvas 元素
+   */
   mount(container: HTMLElement) {
     if (this.#mounted) return this;
 
@@ -120,7 +140,10 @@ export class App {
     return this.scene.getLayer(name);
   }
 
-  /** 注册插件 */
+  /**
+   * 注册插件（同名插件不会重复注册）
+   * @param plugin - 实现 Plugin 接口的插件实例
+   */
   use(plugin: Plugin) {
     if (this.#plugins.some(p => p.name === plugin.name)) {
       console.warn(`Plugin "${plugin.name}" is already registered.`);
@@ -136,7 +159,7 @@ export class App {
     return this.#plugins.find(p => p.name === name);
   }
 
-  /** 同步渲染一帧（适用于静态内容） */
+  /** 同步渲染一帧。适用于静态内容，仅重绘脏层 */
   render() {
     for (const layer of this.scene.layers) {
       if (layer.sign()) {
@@ -145,7 +168,7 @@ export class App {
     }
   }
 
-  /** 请求异步渲染，自动维持动画循环直到无变化 */
+  /** 请求异步渲染循环（rAF），有动画时自动继续，无变化时停止 */
   requestRender() {
     if (this.#rafId !== null) return;
     this.#rafId = requestAnimationFrame(t => this.#tick(t));
@@ -168,6 +191,11 @@ export class App {
     }
   }
 
+  /**
+   * 调整画布尺寸，同步更新所有层、容器和视口矩阵
+   * @param width - 新宽度（像素）
+   * @param height - 新高度（像素）
+   */
   resize(width: number, height: number) {
     this.cfg.width = width;
     this.cfg.height = height;
@@ -250,16 +278,16 @@ export class App {
     return canvas;
   }
 
-  /** 序列化场景为 JSON */
+  /** 序列化所有渲染层的场景图为 JSON，可用于保存/回放 */
   toJSON(): DyeJSON {
-    return serialize(
-      this.scene.layers,
-      this.cfg.width ?? 800,
-      this.cfg.height ?? 600,
-    );
+    return serialize(this.scene.layers, this.cfg.width ?? 800, this.cfg.height ?? 600);
   }
 
-  /** 从 JSON 恢复场景（静态工厂方法） */
+  /**
+   * 从 JSON 快照创建新的 App 实例（静态工厂方法）
+   * @param json - 由 toJSON() 生成的场景快照
+   * @param cfg - 可选的额外配置（会与 json 中的 width/height 合并）
+   */
   static fromJSON(json: DyeJSON, cfg: Partial<AppConfig> = {}): App {
     const merged: Partial<AppConfig> = {
       ...cfg,
@@ -286,9 +314,7 @@ export class App {
    */
   restoreFromJSON(json: DyeJSON) {
     // 收集需要移除的渲染层名称（跳过事件层）
-    const names = this.scene.layers
-      .filter(l => !l.isEventLayer)
-      .map(l => l.layerName);
+    const names = this.scene.layers.filter(l => !l.isEventLayer).map(l => l.layerName);
     for (const name of names) {
       this.scene.removeLayer(name);
     }

@@ -7,6 +7,10 @@ import {EventTarget} from '../events/target';
 
 import type {AO, GF, Mat2d} from '@dye/core';
 
+/**
+ * 场景图所有节点的基类。提供树操作、变换、脏标记、动画驱动等核心能力。
+ * type 编号：0=Graphics 基类，1=Scene，2=Group，3=Node，4=Layer
+ */
 export class Graphics extends EventTarget {
   type: number = 0;
   uid: string = uid8();
@@ -137,6 +141,10 @@ export class Graphics extends EventTarget {
     if (this.#nameMap.has(g.name)) this.#nameMap.delete(g.name);
   }
 
+  /**
+   * 添加子节点。若 child 已有 parent 会先移除。
+   * @param child - 要添加的场景图节点
+   */
   add(child: Graphics) {
     if (child.parent) child.parent.remove(child);
     child.parent = this;
@@ -183,6 +191,11 @@ export class Graphics extends EventTarget {
     return this.uid === target.uid;
   }
 
+  /**
+   * 按名称查找子节点
+   * @param name - 节点名称
+   * @param deep - 是否递归搜索子树（默认 false 仅搜索直接children）
+   */
   find(name: string, deep: boolean = false) {
     let node = this.#nameMap.get(name);
     if (node) return node;
@@ -198,6 +211,11 @@ export class Graphics extends EventTarget {
     return null;
   }
 
+  /**
+   * 按 className 查询节点列表
+   * @param className - CSS 风格的类名
+   * @param deep - 是否递归搜索子树
+   */
   query(className: string, deep: boolean = false) {
     const result: Graphics[] = [];
     const queue: Graphics[] = [...this.children];
@@ -219,6 +237,7 @@ export class Graphics extends EventTarget {
     return this.parent ? this.parent.root() : this;
   }
 
+  /** 根到当前节点的完整路径（从 root 到 this） */
   path(): Graphics[] {
     return this.parent ? this.parent.path().concat(this) : [this];
   }
@@ -227,6 +246,7 @@ export class Graphics extends EventTarget {
     return this.path().includes(target);
   }
 
+  /** 深度优先遍历子树，包含自身 */
   traverse(fn: GF) {
     fn(this);
     for (let i = 0; i < this.children.length; i++) {
@@ -243,6 +263,11 @@ export class Graphics extends EventTarget {
     return this.ez;
   }
 
+  /**
+   * 设置本地矩阵（直接覆盖 translate/rotate/scale 计算的结果）
+   * @param matrix - [a, b, c, d, e, f] 2x3 仿射矩阵
+   * @param needUpdate - 是否触发世界矩阵更新（默认 true）
+   */
   setMatrix(matrix: Mat2d, needUpdate: boolean = true) {
     this.matrix = mat2d.fromValues(...matrix);
     this.needUpdate = needUpdate;
@@ -255,6 +280,11 @@ export class Graphics extends EventTarget {
     return this;
   }
 
+  /**
+   * 设置平移
+   * @param tx - X 方向平移量（像素）
+   * @param ty - Y 方向平移量（像素）
+   */
   translate(tx: number, ty: number) {
     this._translate = vec2.fromValues(tx, ty);
     if (this.transform) {
@@ -339,6 +369,7 @@ export class Graphics extends EventTarget {
     return this;
   }
 
+  /** 启用几何变换动画（GraphicsTransform），可链式配置 duration/delay/easing */
   useTransform() {
     if (this.transform) return this;
     const [tx, ty] = this._translate;
@@ -352,6 +383,7 @@ export class Graphics extends EventTarget {
     return this.visible && this.display;
   }
 
+  /** 检查是否需要重绘（自身或子树有脏标记/更新标记） */
   sign(): boolean {
     if (!this.display) return false;
     if (this.dirty || this.needUpdate || this.worldMatrixNeedUpdate) return true;

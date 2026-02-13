@@ -10,6 +10,7 @@ export class BoundingBox {
 
   // ── 静态工厂 ────────────────────────────────────────
 
+  /** 从 x, y, width, height 创建包围盒 */
   static fromRect(x: number, y: number, width: number, height: number) {
     const b = new BoundingBox();
     b.x = x;
@@ -19,6 +20,7 @@ export class BoundingBox {
     return b;
   }
 
+  /** 从两个对角点 (x1,y1), (x2,y2) 创建包围盒 */
   static fromPoints(x1: number, y1: number, x2: number, y2: number) {
     return BoundingBox.fromRect(x1, y1, x2 - x1, y2 - y1);
   }
@@ -140,7 +142,11 @@ export class BoundingBox {
     return BoundingBox.fromRect(x0, y0, x1 - x0, y1 - y0);
   }
 
-  /** 四边内缩/外扩 padding */
+  /**
+   * 四边内缩/外扩
+   * @param padding - [top, right, bottom, left]
+   * @param outward - true 为外扩，false 为内缩（默认）
+   */
   pad(padding: [number, number, number, number], outward = false) {
     const [t, r, b, l] = padding;
     if (outward) return BoundingBox.fromRect(this.x - l, this.y - t, this.width + l + r, this.height + t + b);
@@ -166,13 +172,21 @@ export class BoundingBox {
     return BoundingBox.fromRect(this.x, this.y + h * index, this.width, h);
   }
 
-  /** 按 scale 函数 X 向分割 */
+  /**
+   * 按 scale 函数 X 向分割
+   * @param scale - 含 scale() 和 bandwidth 的序数比例尺
+   * @param index - 分割索引
+   */
   divideXByScale(scale: {scale: (i: number) => number; bandwidth: number}, index: number) {
     const x0 = scale.scale(index);
     return BoundingBox.fromRect(x0, this.y, scale.bandwidth, this.height);
   }
 
-  /** 按 scale 函数 Y 向分割 */
+  /**
+   * 按 scale 函数 Y 向分割
+   * @param scale - 含 scale() 和 bandwidth 的序数比例尺
+   * @param index - 分割索引
+   */
   divideYByScale(scale: {scale: (i: number) => number; bandwidth: number}, index: number) {
     const y0 = scale.scale(index);
     return BoundingBox.fromRect(this.x, y0, this.width, scale.bandwidth);

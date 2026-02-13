@@ -11,6 +11,7 @@ import type {AO, Point} from '@dye/core';
  */
 export type TextMeasureFn = (text: string, attrs: AO) => BoundingBox | null;
 
+/** 文本形状，支持自定义测量函数计算包围盒 */
 export class TextShape extends Shape {
   command = 'text' as const;
 

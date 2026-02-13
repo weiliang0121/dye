@@ -4,6 +4,7 @@ import {Shape} from '../core';
 
 import type {Point} from '@dye/core';
 
+/** 矩形形状 */
 export class RectShape extends Shape {
   command = 'rect' as const;
 
@@ -12,6 +13,13 @@ export class RectShape extends Shape {
   width: number = 1;
   height: number = 1;
 
+  /**
+   * 设置矩形参数
+   * @param x - 左上角 X
+   * @param y - 左上角 Y
+   * @param width - 宽度
+   * @param height - 高度
+   */
   from(x: number, y: number, width: number, height: number) {
     this.x = x;
     this.y = y;

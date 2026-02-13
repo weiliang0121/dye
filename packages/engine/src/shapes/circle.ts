@@ -4,6 +4,7 @@ import {Shape} from '../core';
 
 import {Point} from '@dye/core';
 
+/** 圆形形状，用于 Scene Graph 中的圆形节点 */
 export class CircleShape extends Shape {
   command = 'circle' as const;
 
@@ -11,6 +12,12 @@ export class CircleShape extends Shape {
   cy: number = 0;
   r: number = 1;
 
+  /**
+   * 设置圆形参数
+   * @param cx - 圆心 X
+   * @param cy - 圆心 Y
+   * @param r - 半径
+   */
   from(cx: number, cy: number, r: number) {
     this.cx = cx;
     this.cy = cy;

@@ -3,15 +3,25 @@ import {isNum, isUndef} from '@dye/core';
 
 import {createRing} from './ring';
 
+/** 扇形配置 */
 export interface SectorOptions {
+  /** 圆心 X */
   cx: number;
+  /** 圆心 Y */
   cy: number;
+  /** 基准半径 */
   r: number;
+  /** 起始角度（弧度） */
   startAngle: number;
+  /** 结束角度（弧度） */
   endAngle: number;
+  /** 扇形间 pad 角度 */
   padAngle?: number;
+  /** 内半径比例 (0~1) */
   innerRadius: number;
+  /** 外半径比例 (0~1) */
   outerRadius: number;
+  /** 圆角半径（数字为统一，4元素数组为 [outerLeft, innerLeft, outerRight, innerRight]） */
   rc?: number | number[];
 }
 

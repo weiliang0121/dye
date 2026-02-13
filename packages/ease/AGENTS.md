@@ -19,6 +19,7 @@ Layer 0（零依赖）
 
 | 类别 | In | Out | InOut |
 |------|-----|------|-------|
+| Linear | `linear` | — | — |
 | Quad | `quadIn` | `quadOut` | `quadInOut` |
 | Cubic | `cubicIn` | `cubicOut` | `cubicInOut` |
 | Quart | `quartIn` | `quartOut` | `quartInOut` |
@@ -39,7 +40,7 @@ Layer 0（零依赖）
 
 ### 命名规范
 - 函数名：`{family}{Direction}`，如 `cubicIn`、`bounceOut`
-- Map key：`in{Family}`、`out{Family}`、`inOut{Family}`，如 `inCubic`、`outBounce`
+- Map key：`linear`、`in{Family}`、`out{Family}`、`inOut{Family}`，如 `inCubic`、`outBounce`
 - 特化函数（quad/cubic/quart/quint）内联运算，不调用 polyIn
 
 ## 设计要点

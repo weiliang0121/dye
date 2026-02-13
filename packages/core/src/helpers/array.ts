@@ -1,6 +1,7 @@
 import {isNil, isNull, isNum, isStr, isUndef} from '../guards';
 import {quickselect} from './quick-select';
 
+/** 计数（strict=true 时跳过 nil 值） */
 export const count = (arr: unknown[], strict = true): number => {
   let count = 0;
   for (let i = 0; i < arr.length; i++) {
@@ -10,6 +11,7 @@ export const count = (arr: unknown[], strict = true): number => {
   return count;
 };
 
+/** 数组最小值（跳过 NaN） */
 export const min = (arr: number[]): number => {
   let min = Infinity;
   for (let i = 0; i < arr.length; i++) {
@@ -20,6 +22,7 @@ export const min = (arr: number[]): number => {
   return min;
 };
 
+/** 按访问器取最小值对应的元素 */
 export const minBy = <T>(arr: T[], fn: (d: T) => number): T => {
   let min = Infinity;
   let minD: T = arr[0];
@@ -35,6 +38,7 @@ export const minBy = <T>(arr: T[], fn: (d: T) => number): T => {
   return minD;
 };
 
+/** 数组最大值（跳过 NaN） */
 export const max = (arr: number[]): number => {
   let max = -Infinity;
   for (let i = 0; i < arr.length; i++) {
@@ -45,6 +49,7 @@ export const max = (arr: number[]): number => {
   return max;
 };
 
+/** 按访问器取最大值对应的元素 */
 export const maxBy = <T>(arr: T[], fn: (d: T) => number): T => {
   let max = -Infinity;
   let maxD: T = arr[0];
@@ -60,6 +65,7 @@ export const maxBy = <T>(arr: T[], fn: (d: T) => number): T => {
   return maxD;
 };
 
+/** 数组求和（跳过 NaN） */
 export const sum = (arr: number[]): number => {
   let sum = 0;
   for (let i = 0; i < arr.length; i++) {
@@ -72,6 +78,7 @@ export const sum = (arr: number[]): number => {
 
 export const mean = (arr: number[]): number => sum(arr) / arr.length;
 
+/** 数组的值域（最小值和最大值） */
 export const extent = (arr: number[]): [number, number] => {
   let min = Infinity;
   let max = -Infinity;
@@ -84,6 +91,7 @@ export const extent = (arr: number[]): [number, number] => {
   return [min, max];
 };
 
+/** 按访问器取值域对应的元素 */
 export const extentBy = <T>(arr: T[], fn: (d: T) => number): [T | null, T | null] => {
   let min = Infinity;
   let max = -Infinity;
@@ -105,6 +113,7 @@ export const extentBy = <T>(arr: T[], fn: (d: T) => number): [T | null, T | null
   return [minD, maxD];
 };
 
+/** 生成等差数列（类似 Python range） */
 export const range = (start: number, stop: number, step: number = 1): number[] => {
   if (isUndef(stop)) [start, stop] = [0, start];
   start = Number(start);
@@ -120,18 +129,25 @@ export const uniqueArray = <T>(arr: T[]): T[] => {
   return Array.from(new Set(arr));
 };
 
+/** 升序比较器（支持数字和字符串） */
 export const ascending = (a: unknown, b: unknown): number => {
   if (isNull(a) || isNull(b) || isUndef(a) || isUndef(b)) return NaN;
   if (isStr(a) && isStr(b)) return a.localeCompare(b);
   return a < b ? -1 : a > b ? 1 : a === b ? 0 : NaN;
 };
 
+/** 降序比较器（支持数字和字符串） */
 export const descending = (a: unknown, b: unknown): number => {
   if (isNull(a) || isNull(b) || isUndef(a) || isUndef(b)) return NaN;
   if (isStr(a) && isStr(b)) return b.localeCompare(a);
   return b < a ? -1 : b > a ? 1 : b === a ? 0 : NaN;
 };
 
+/**
+ * 计算分位数（使用 quickselect 算法）
+ * @param arr - 数值数组（会被就地部分排序）
+ * @param p - 分位点（0~1，如 0.5=中位数）
+ */
 export const quantile = (arr: number[], p: number): number => {
   const n = arr.length;
   if (n === 0) return NaN;
@@ -148,6 +164,7 @@ export const quantile = (arr: number[], p: number): number => {
 
 export const median = (arr: number[]): number => quantile(arr, 0.5);
 
+/** 将阈值数组和 domain 转换为区间对数组 */
 export const arrayFromThresholds = (thresholds: number[], domain: [number, number]): [number, number][] => {
   const [min, max] = domain;
   const n = thresholds.length;
@@ -159,6 +176,7 @@ export const arrayFromThresholds = (thresholds: number[], domain: [number, numbe
   return arr;
 };
 
+/** 将连续数组转换为相邻元素配对的区间数组 */
 export const arrayFromRange = (range: number[]): [number, number][] => {
   const n = range.length;
   if (n <= 0) return [];

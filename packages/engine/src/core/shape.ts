@@ -6,6 +6,10 @@ import type {Path} from '@dye/path';
 
 export type ShapeCommand = 'text' | 'circle' | 'rect' | 'line' | 'path' | 'image' | '';
 
+/**
+ * 图形形状基类。子类通过 from() 设置参数，build() 触发包围盒计算。
+ * command 指定渲染器的绘制方法：'text' | 'circle' | 'rect' | 'line' | 'path' | 'image'
+ */
 export class Shape {
   uid: string = uid8();
 
@@ -42,19 +46,23 @@ export class Shape {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
   options(..._args: any[]) {}
 
+  /** 子类覆写此方法设置形状参数（如 CircleShape.from(cx, cy, r)） */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
   from(..._args: any[]) {}
 
+  /** 构建形状：计算包围盒和路径数据，仅在 needUpdate 时执行 */
   build() {
     if (!this.needUpdate) return;
     this.box();
     this.needUpdate = false;
   }
 
+  /** 返回 SVG 路径字符串（d 属性） */
   path(): string {
     return this.d;
   }
 
+  /** 返回缓存的 Path2D 对象（用于 Canvas 命中检测） */
   path2d() {
     if (!this.p) this.p = new Path2D(this.d);
     return this.p;
@@ -71,6 +79,10 @@ export class Shape {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   tick(_time: number) {}
 
+  /**
+   * 点命中检测（默认使用包围盒，子类可覆写用 path2d 精确检测）
+   * @param point - 本地坐标 [x, y]
+   */
   hit(point: Point) {
     if (!this.boundingBox) this.box();
     if (!this.boundingBox) return false;

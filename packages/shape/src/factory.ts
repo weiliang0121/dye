@@ -33,6 +33,19 @@ const shapeCreators = new Map<string, (path: Path, options: any) => void>([
   ['boxY', createBoxY],
 ]);
 
+/**
+ * 统一形状工厂：按类型名分发到对应的形状生成器
+ * @param path - Path 实例（用于写入路径命令）
+ * @param type - 形状类型（circle/rect/arc/sector/line/area 等）
+ * @param options - 对应形状的配置参数
+ *
+ * @example
+ * ```ts
+ * const path = new Path();
+ * createShape(path, 'circle', { cx: 100, cy: 100, r: 50 });
+ * console.log(path.toString()); // SVG path string
+ * ```
+ */
 export const createShape = <T extends ShapeType>(path: Path, type: T, options: ShapeOptionsMap[T]) => {
   const creator = shapeCreators.get(type);
   if (!creator) throw new Error(`Unknown shape type: ${type}`);

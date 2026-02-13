@@ -2,6 +2,7 @@ import {BoundingBox} from '@dye/bounding';
 
 import {Shape} from '../core';
 
+/** 线段形状 */
 export class LineShape extends Shape {
   command = 'line' as const;
 
@@ -10,6 +11,13 @@ export class LineShape extends Shape {
   x2: number = 1;
   y2: number = 1;
 
+  /**
+   * 设置线段端点
+   * @param x1 - 起点 X
+   * @param y1 - 起点 Y
+   * @param x2 - 终点 X
+   * @param y2 - 终点 Y
+   */
   from(x1: number, y1: number, x2: number, y2: number) {
     this.x1 = x1;
     this.y1 = y1;

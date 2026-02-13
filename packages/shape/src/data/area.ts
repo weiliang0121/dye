@@ -1,12 +1,18 @@
 import type {Path} from '@dye/path';
 import {curveMap} from '@dye/curve';
 
+/** 面积图配置 */
 export interface AreaOptions {
+  /** 上边界点序列 */
   upperPoints: [number, number][];
+  /** 下边界点序列 */
   lowerPoints: [number, number][];
+  /** 统一曲线插值类型（默认 'linear'） */
   curve?: string;
   closed?: boolean;
+  /** 上边界曲线类型（覆盖 curve） */
   upperCurve?: string;
+  /** 下边界曲线类型（覆盖 curve） */
   lowerCurve?: string;
 }
 
@@ -18,6 +24,7 @@ export interface SegmentAreaOptions {
   lowerCurve?: string;
 }
 
+/** 生成面积图路径（上下边界 + 曲线插值） */
 export const createArea = (path: Path, options: AreaOptions) => {
   const {upperPoints, lowerPoints, curve = 'linear', upperCurve = curve, lowerCurve = curve} = options;
   if (Reflect.has(curveMap, upperCurve)) curveMap[upperCurve](path, upperPoints);

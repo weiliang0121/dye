@@ -9,7 +9,13 @@ Layer 0（零依赖）
 ## 核心 API
 
 ### BoundingBox 类
-表示轴对齐包围盒，存储 `x, y, width, height`。
+表示轴对齐包围盒。
+
+**公有属性**：
+- `x: number` — 左上角 X
+- `y: number` — 左上角 Y
+- `width: number` — 宽度
+- `height: number` — 高度
 
 **静态工厂**：
 - `BoundingBox.fromRect(x, y, width, height)` — 从矩形创建
@@ -38,7 +44,7 @@ Layer 0（零依赖）
 - `intersection(box)` — 求交集
 - `union(box)` — 求并集
 - `expandPoint(px, py)` — 扩展到包含指定点
-- `pad(padding, outward?)` — 四边内缩/外扩
+- `pad(padding, outward?)` — 四边内缩/外扩，`padding: [top, right, bottom, left]`，`outward` 默认 `false`（内缩）
 
 **坐标转换**：
 - `localXY(px, py)` — 全局坐标转本地坐标
@@ -64,7 +70,8 @@ const merged = box.union(BoundingBox.fromRect(0, 0, 50, 50));
 ## 变更记录
 - 删除 `BoundingRect`（无外部消费者）
 - 删除 `fromLayout`（与 fromRect 重复）、`r`（与 radius 重复）
-- 重命名：`from→set`、`in→containsPoint`、`contains→containsBox`、`intersect→intersects`、`cut→intersection`
+- 重命名：`from→set`、`contains→containsBox`、`intersect→intersects`、`cut→intersection`
+- 新增 `containsPoint`，保留 `in` 作为别名并标记 `@deprecated`
 - `intersection` 返回新实例（原 `cut` 会修改自身）
 - 新增：`right`、`bottom`、`area`、`empty`、`toArray`、`union`、`expandPoint`
 - `divideXByScale`/`divideYByScale` 的 scale 参数已添加类型约束
