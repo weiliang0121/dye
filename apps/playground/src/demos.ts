@@ -49,6 +49,7 @@ import randomCircles from './demos/random-circles.js?raw';
 
 // --- Plugin: Element Plugin ---
 import elementPluginDemo from './demos/element-plugin.js?raw';
+import elementLifecycleDemo from './demos/element-lifecycle.js?raw';
 
 export interface Demo {
   name: string;
@@ -107,4 +108,5 @@ export const demos: Demo[] = [
 
   // ── Plugin: Element Plugin ──
   {name: '元素插件 Element Plugin', code: elementPluginDemo},
+  {name: '元素生命周期 Element Lifecycle', code: elementLifecycleDemo},
 ];

@@ -1,158 +1,98 @@
-/**
- * Element Plugin — 类型定义。
- *
- * 零运行时，纯接口。
- * 为 createElement / Element / Graph 提供类型约束。
- */
-
 import type {Group} from 'rendx-engine';
 
-// ========================
-// Element Base Data
-// ========================
+// ═══════════════════════════════════════════════
+// Base data — 所有元素的公共字段
+// ═══════════════════════════════════════════════
 
-/**
- * 所有 Element 实例共享的基础定位字段。
- * 用户自定义数据 T 与此合并作为完整的 element data。
- */
-export interface ElementBase {
-  /** 唯一标识 */
+/** Node 基础字段 */
+export interface NodeBase {
   id: string;
-  /** X 坐标（世界坐标） */
   x: number;
-  /** Y 坐标（世界坐标） */
   y: number;
-  /** 宽度（px） */
   width?: number;
-  /** 高度（px） */
   height?: number;
 }
 
-/** 完整的 element data = 基础定位 + 用户自定义数据 */
-export type ElementData<T = Record<string, unknown>> = ElementBase & T;
-
-// ========================
-// Element Options (add 时的元数据)
-// ========================
-
-/** graph.add() 的选项 — 控制元素的挂载分组和依赖关系 */
-export interface ElementOptions {
-  /**
-   * 挂载到哪个分组（控制 z 排序）。
-   * - 'nodes' → nodesGroup（后绘制，在上方）
-   * - 'edges' → edgesGroup（先绘制，在下方）
-   * - 不指定 → 默认 'nodes'
-   *
-   * 注：分组使用 Group 而非独立 Canvas 层，零额外内存开销。
-   */
-  layer?: 'nodes' | 'edges';
-
-  /**
-   * 依赖的其他 element id 列表。
-   * 当被依赖的 element 更新时，本 element 会自动重建子树。
-   * 典型场景：edge 声明 deps: [sourceId, targetId]，node 移动后 edge 自动重绘。
-   */
-  deps?: string[];
+/** Edge 基础字段 */
+export interface EdgeBase {
+  id: string;
+  source: string;
+  target: string;
 }
 
-// ========================
-// Render Context（render fn 的上下文）
-// ========================
+// ═══════════════════════════════════════════════
+// Render context — render fn 的第一参数
+// ═══════════════════════════════════════════════
 
-/**
- * render 函数的上下文 — 在 fn(ctx, data, graph) 中使用。
- *
- * ctx 提供：
- * - group: 已创建好的 Group 容器（translate 已设置）
- * - width / height: 元素尺寸
- * - onCleanup(): 注册清理回调
- */
-export interface ElementContext {
-  /** 自动创建的 Group 容器，用户往里 add Node/子 Group */
-  readonly group: Group;
-  /** 元素宽度 */
-  readonly width: number;
-  /** 元素高度 */
-  readonly height: number;
-  /** 注册清理回调（update/dispose 时调用） */
-  onCleanup(fn: () => void): void;
+/** Node render fn 接收的上下文 */
+export interface NodeContext {
+  group: Group;
+  width: number;
+  height: number;
+  onCleanup: (fn: () => void) => void;
 }
 
-/**
- * 用户编写的 render 函数签名。
- * 在 Group 内用 Node.create / group.add 等 engine 原生 API 构建子树。
- * graph 提供只读查询，让 edge 类型的 render 能获取其他 element 的数据。
- */
-export type ElementRenderFn<T = Record<string, unknown>> = (ctx: ElementContext, data: ElementData<T>, graph: GraphQuery) => void;
-
-// ========================
-// Element Definition
-// ========================
-
-/**
- * 元素定义 — createElement() 的返回值。
- * 持有 render 函数引用 + 类型标记，供 Graph 实例化使用。
- */
-export interface ElementDef<T = Record<string, unknown>> {
-  /** 标记为 element 定义（运行时类型检查用） */
-  readonly __element_def__: true;
-  /** 用户提供的 render 函数 */
-  readonly render: ElementRenderFn<T>;
+/** Edge render fn 接收的上下文 */
+export interface EdgeContext {
+  group: Group;
+  source: Element<NodeBase> | undefined;
+  target: Element<NodeBase> | undefined;
+  onCleanup: (fn: () => void) => void;
 }
 
-// ========================
-// Element Instance
-// ========================
+// ═══════════════════════════════════════════════
+// Render function signatures
+// ═══════════════════════════════════════════════
 
-/**
- * Element 实例 — 一份 data 对应一棵 Group 子树。
- *
- * 由 Graph.add() 创建，管理 data ↔ scene graph 的绑定关系。
- */
+export type NodeRenderFn<T extends NodeBase = NodeBase> = (ctx: NodeContext, data: T & NodeBase, graph: GraphQuery) => void;
+
+export type EdgeRenderFn<T extends EdgeBase = EdgeBase> = (ctx: EdgeContext, data: T & EdgeBase, graph: GraphQuery) => void;
+
+// ═══════════════════════════════════════════════
+// Element definition — createNode / createEdge 的返回值
+// ═══════════════════════════════════════════════
+
+export interface NodeDef<T extends NodeBase = NodeBase> {
+  __element_def__: true;
+  role: 'node';
+  render: NodeRenderFn<T>;
+}
+
+export interface EdgeDef<T extends EdgeBase = EdgeBase> {
+  __element_def__: true;
+  role: 'edge';
+  render: EdgeRenderFn<T>;
+}
+
+export type ElementDef = NodeDef | EdgeDef;
+
+// ═══════════════════════════════════════════════
+// Element 运行时实例
+// ═══════════════════════════════════════════════
+
 export interface Element<T = Record<string, unknown>> {
-  /** 元素 ID */
   readonly id: string;
-  /** 当前数据快照（只读） */
-  readonly data: Readonly<ElementData<T>>;
-  /** 底层 Group（可直接操作 engine API） */
+  readonly role: 'node' | 'edge';
   readonly group: Group;
-  /** 是否已挂载到 scene */
+  readonly data: T & (NodeBase | EdgeBase);
   readonly mounted: boolean;
-  /** 所在图层 */
-  readonly layer: 'nodes' | 'edges';
-  /** 依赖的 element id 列表 */
-  readonly deps: ReadonlyArray<string>;
-
-  /**
-   * 更新数据 — 合并 partial → 清空 children → 重跑 render fn。
-   * 位置变化只更新 translate，不重建子树。
-   * 更新完成后，自动触发依赖本 element 的其他 element 重绘。
-   */
-  update(partial: Partial<ElementData<T>>): void;
-
-  /** 销毁元素（清理回调 + 移除 group children + 从 scene 移除） */
+  readonly layer: string;
+  readonly deps: string[];
+  update(patch: Partial<T>): void;
   dispose(): void;
 }
 
-// ========================
-// Graph Query（只读查询接口）
-// ========================
+// ═══════════════════════════════════════════════
+// Graph query — render fn 的第三参数
+// ═══════════════════════════════════════════════
 
-/**
- * Graph 的只读查询接口 — 传入 render fn 第三个参数。
- *
- * 让 element 的 render 函数能感知其他 element 的存在和数据，
- * 但不能修改 graph 结构（add/remove/register）。
- */
 export interface GraphQuery {
-  /** 获取 Element 实例 */
-  get<T>(id: string): Element<T> | undefined;
-  /** 是否存在指定 id 的元素 */
+  get<T = Record<string, unknown>>(id: string): Element<T> | undefined;
   has(id: string): boolean;
-  /** 所有 element id */
+  count: number;
   getIds(): string[];
-  /** 所有 Element 实例 */
-  getAll(): Element<Record<string, unknown>>[];
-  /** 元素总数 */
-  readonly count: number;
+  getAll(): Element[];
+  getNodes(): Element<NodeBase>[];
+  getEdges(): Element<EdgeBase>[];
+  getEdgesOf(nodeId: string): Element<EdgeBase>[];
 }

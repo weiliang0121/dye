@@ -1,4 +1,11 @@
-export {createElement} from './create';
+// ── Factory ──
+export {createNode, createEdge} from './create';
+
+// ── Runtime ──
 export {ElementImpl} from './element';
-export {graphPlugin, GraphPlugin} from './graph';
-export type {ElementBase, ElementData, ElementOptions, ElementContext, ElementRenderFn, ElementDef, Element, GraphQuery} from './types';
+
+// ── Plugin ──
+export {GraphPlugin, graphPlugin} from './graph';
+
+// ── Types ──
+export type {NodeBase, EdgeBase, NodeContext, EdgeContext, NodeRenderFn, EdgeRenderFn, NodeDef, EdgeDef, ElementDef, Element, GraphQuery} from './types';

@@ -1,15 +1,15 @@
 const {App, Node, Group} = __rendx_engine__;
-const {createElement, graphPlugin} = __rendx_element_plugin__;
+const {createNode, createEdge, graphPlugin} = __rendx_element_plugin__;
 const {Path} = __rendx_path__;
 const {bumpX} = __rendx_curve__;
 
 const app = new App({width: 800, height: 600});
 app.mount(container);
 
-// ── 1. 定义 Element 类型 ── 用 engine 原生 API，像写 shader 一样
+// ── 1. 定义 Node 类型 ── 用 engine 原生 API（Node.create / group.add）构建 Group 子树
 
 // Card: 简单矩形卡片
-const Card = createElement((ctx, data) => {
+const Card = createNode((ctx, data) => {
   const bg = Node.create('round', {
     fill: data.color ?? '#ffffff',
     stroke: data.borderColor ?? '#333333',
@@ -44,7 +44,7 @@ const Card = createElement((ctx, data) => {
 });
 
 // ListNode: 带标题和多行的复合节点
-const ListNode = createElement((ctx, data) => {
+const ListNode = createNode((ctx, data) => {
   const rowHeight = 30;
   const headerHeight = 32;
   const rows = data.rows ?? [];
@@ -115,27 +115,21 @@ const ListNode = createElement((ctx, data) => {
   });
 });
 
-// BezierEdge: 通过 graph 查询两端 node，用 rendx-curve 的 bumpX 画平滑曲线
-const BezierEdge = createElement((_ctx, data, graph) => {
-  const src = graph.get(data.source);
-  const tgt = graph.get(data.target);
+// ── 2. 定义 Edge 类型 ── ctx.source / ctx.target 由框架自动注入
+
+const BezierEdge = createEdge((ctx, data) => {
+  const src = ctx.source;
+  const tgt = ctx.target;
   if (!src || !tgt) return;
 
-  // 用户自定义端口坐标计算（复用约定的布局参数）
+  // 用户自定义端口坐标计算
   const from = resolvePort(src.data, data.sourcePort, 'right');
   const to = resolvePort(tgt.data, data.targetPort, 'left');
   if (!from || !to) return;
 
-  // 全局坐标 → 减去当前 group 的 translate
-  const ox = data.x;
-  const oy = data.y;
-
   // 使用 rendx-path + rendx-curve 生成平滑曲线
   const p = new Path();
-  bumpX(p, [
-    [from[0] - ox, from[1] - oy],
-    [to[0] - ox, to[1] - oy],
-  ]);
+  bumpX(p, [from, to]);
 
   const pathNode = Node.create('path', {
     stroke: data.color ?? '#999',
@@ -144,7 +138,7 @@ const BezierEdge = createElement((_ctx, data, graph) => {
     opacity: 0.7,
   });
   pathNode.shape.from(p.toString());
-  _ctx.group.add(pathNode);
+  ctx.group.add(pathNode);
 });
 
 // 端口坐标解析 — 用户根据自己的布局约定编写
@@ -169,7 +163,7 @@ function resolvePort(nodeData, portSpec, defaultSide) {
   return [x, y];
 }
 
-// ── 2. Graph 管理器 ──
+// ── 3. Graph 管理器 ──
 
 const graph = graphPlugin();
 app.use(graph);
@@ -178,7 +172,7 @@ graph.register('card', Card);
 graph.register('list-node', ListNode);
 graph.register('edge', BezierEdge);
 
-// ── 3. 添加节点实例 ──
+// ── 4. 添加节点 ── createNode 自动设置 translate(x, y)
 
 const qc = graph.add('list-node', {
   id: 'queue-ctrl',
@@ -220,73 +214,52 @@ const agg = graph.add('card', {
   borderColor: '#51cf66',
 });
 
-// ── 4. 添加边实例（分层 + 依赖追踪：node 移动时 edge 自动重绘） ──
+// ── 5. 添加边 ── createEdge 自动派生 layer='edges' + deps=[source, target]
 
-graph.add(
-  'edge',
-  {
-    id: 'e1',
-    x: 0,
-    y: 0,
-    source: 'queue-ctrl',
-    target: 'processor',
-    sourcePort: {row: 'in1', side: 'right'},
-    targetPort: {row: 'src', side: 'left'},
-    color: '#6e8efb',
-  },
-  {layer: 'edges', deps: ['queue-ctrl', 'processor']},
-);
+graph.add('edge', {
+  id: 'e1',
+  source: 'queue-ctrl',
+  target: 'processor',
+  sourcePort: {row: 'in1', side: 'right'},
+  targetPort: {row: 'src', side: 'left'},
+  color: '#6e8efb',
+});
 
-graph.add(
-  'edge',
-  {
-    id: 'e2',
-    x: 0,
-    y: 0,
-    source: 'queue-ctrl',
-    target: 'processor',
-    sourcePort: {row: 'in2', side: 'right'},
-    targetPort: {row: 'filter', side: 'left'},
-    color: '#6e8efb',
-  },
-  {layer: 'edges', deps: ['queue-ctrl', 'processor']},
-);
+graph.add('edge', {
+  id: 'e2',
+  source: 'queue-ctrl',
+  target: 'processor',
+  sourcePort: {row: 'in2', side: 'right'},
+  targetPort: {row: 'filter', side: 'left'},
+  color: '#6e8efb',
+});
 
-graph.add(
-  'edge',
-  {
-    id: 'e3',
-    x: 0,
-    y: 0,
-    source: 'queue-ctrl',
-    target: 'aggregator',
-    sourcePort: {row: 'in3', side: 'right'},
-    targetPort: {side: 'left'},
-    color: '#51cf66',
-  },
-  {layer: 'edges', deps: ['queue-ctrl', 'aggregator']},
-);
+graph.add('edge', {
+  id: 'e3',
+  source: 'queue-ctrl',
+  target: 'aggregator',
+  sourcePort: {row: 'in3', side: 'right'},
+  targetPort: {side: 'left'},
+  color: '#51cf66',
+});
 
-graph.add(
-  'edge',
-  {
-    id: 'e4',
-    x: 0,
-    y: 0,
-    source: 'processor',
-    target: 'aggregator',
-    sourcePort: {row: 'output', side: 'right'},
-    targetPort: {side: 'left'},
-    color: '#f59f00',
-  },
-  {layer: 'edges', deps: ['processor', 'aggregator']},
-);
+graph.add('edge', {
+  id: 'e4',
+  source: 'processor',
+  target: 'aggregator',
+  sourcePort: {row: 'output', side: 'right'},
+  targetPort: {side: 'left'},
+  color: '#f59f00',
+});
 
 app.render();
 
-console.log('Graph Plugin — createElement + graphPlugin demo');
+console.log('Graph Plugin — createNode + createEdge demo');
 console.log('Elements:', graph.getIds());
-console.log('Nodes:', graph.getAll().filter(e => e.layer === 'nodes').length);
-console.log('Edges:', graph.getAll().filter(e => e.layer === 'edges').length);
-console.log('Rendering: Group-based z-ordering (zero extra Canvas overhead)');
-console.log('Features: rendx-curve bumpX, dependency auto-invalidation');
+console.log('Nodes:', graph.getNodes().length);
+console.log('Edges:', graph.getEdges().length);
+console.log(
+  'Edges of queue-ctrl:',
+  graph.getEdgesOf('queue-ctrl').map(e => e.id),
+);
+console.log('Features: auto layer, auto deps, ctx.source/target injection');

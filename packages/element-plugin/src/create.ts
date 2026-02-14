@@ -1,33 +1,30 @@
+import type {NodeBase, EdgeBase, NodeDef, EdgeDef, NodeRenderFn, EdgeRenderFn} from './types';
+
 /**
- * createElement — 元素类型工厂。
+ * 定义一个 Node 类型的元素。
  *
- * 接受一个 render 函数，返回一个 ElementDef。
- * render 函数在内部使用 engine 原生 API（Node.create / group.add）
- * 构建 Group 子树，框架只管生命周期。
- *
- * @example
- * ```ts
- * const Card = createElement<{ title: string }>((ctx, data) => {
- *   const bg = Node.create('rect', { fill: '#fff' });
- *   bg.shape.from(0, 0, ctx.width, ctx.height);
- *   ctx.group.add(bg);
- * });
- *
- * // Edge 可通过 graph 查询两端 node
- * const Edge = createElement<{ source: string; target: string }>((ctx, data, graph) => {
- *   const src = graph.get(data.source);
- *   const tgt = graph.get(data.target);
- *   if (!src || !tgt) return;
- *   // 根据 src/tgt 的 data 计算位置并画线
- * });
- * ```
+ * Node 是有位置 (x, y) 的实体，render fn 接收 NodeContext（group + width/height）。
+ * 框架会自动为 Node 设置 group.translate(x, y)，仅位移变化时跳过子树重建。
  */
-
-import type {ElementDef, ElementRenderFn} from './types';
-
-export function createElement<T = Record<string, unknown>>(render: ElementRenderFn<T>): ElementDef<T> {
+export function createNode<T extends NodeBase = NodeBase>(render: NodeRenderFn<T>): NodeDef<T> {
   return {
     __element_def__: true,
+    role: 'node',
+    render,
+  };
+}
+
+/**
+ * 定义一个 Edge 类型的元素。
+ *
+ * Edge 连接两个 Node（source → target），render fn 接收 EdgeContext（group + source/target 实例）。
+ * 框架自动从 source/target 派生 deps 和 layer='edges'。
+ * Edge 的 group 不设置 translate — 由 render fn 自行计算坐标。
+ */
+export function createEdge<T extends EdgeBase = EdgeBase>(render: EdgeRenderFn<T>): EdgeDef<T> {
+  return {
+    __element_def__: true,
+    role: 'edge',
     render,
   };
 }

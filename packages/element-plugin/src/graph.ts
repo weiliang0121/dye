@@ -1,190 +1,141 @@
-/**
- * Graph 插件 — Element 实例的管理器。
- *
- * 职责：
- * 1. 注册 Element 类型（register）
- * 2. 实例化 Element 并自动挂载到 scene（add）
- * 3. Group 分组排序：edges 子组在 nodes 子组下方（零额外 Canvas 开销）
- * 4. 依赖追踪：deps 声明，node 更新自动触发 edge 重绘
- * 5. 通过 bus + state 通知其他插件
- * 6. app.dispose() 时自动清理
- *
- * 渲染分层策略：
- * 不创建额外的 Canvas 层（Layer），而是在 default 层内使用两个 Group 实现 z 排序：
- * ```
- * default Layer (唯一 Canvas)
- * ├── edgesGroup  ← 先遍历 → 先绘制 → 在下方
- * └── nodesGroup  ← 后遍历 → 后绘制 → 在上方
- * ```
- * 这避免了每个 Layer 创建独立 Renderer/Canvas 带来的内存开销。
- *
- * @example
- * ```ts
- * const graph = graphPlugin();
- * app.use(graph);
- *
- * graph.register('card', Card);
- * graph.register('edge', Edge);
- *
- * const n1 = graph.add('card', { id: 'n1', x: 0, y: 0, width: 100, height: 60, title: 'A' });
- * const e1 = graph.add('edge', { id: 'e1', x: 0, y: 0, source: 'n1', target: 'n2' },
- *   { layer: 'edges', deps: ['n1', 'n2'] });
- *
- * // n1 移动 → e1 自动重绘
- * n1.update({ x: 200 });
- * ```
- */
+import {Group} from 'rendx-engine';
 
 import {ElementImpl} from './element';
 
-import {Group} from 'rendx-engine';
+import type {App} from 'rendx-engine';
+import type {Element, ElementDef, NodeBase, EdgeBase, GraphQuery} from './types';
+import type {Plugin} from 'rendx-engine';
 
-import type {App, Plugin} from 'rendx-engine';
-import type {Element, ElementData, ElementDef, ElementOptions, GraphQuery} from './types';
-
+/**
+ * GraphPlugin — 元素生命周期管理器。
+ *
+ * 核心职责:
+ * 1. 注册元素类型定义 (register)
+ * 2. 增删查改元素实例 (add / remove / get / update)
+ * 3. 自动分层: Node → 'nodes' Group, Edge → 'edges' Group
+ * 4. 自动依赖: Edge 的 deps 从 source/target 自动派生
+ * 5. 依赖追踪: 被依赖元素更新时自动重绘依赖方
+ * 6. Graph 查询: getNodes / getEdges / getEdgesOf
+ */
 export class GraphPlugin implements Plugin, GraphQuery {
-  name = 'graph';
+  readonly name = 'graph';
 
-  state = [
+  readonly state = [
     {
       key: 'graph:elements',
-      description: '所有 element 实例的 id 列表',
+      description: 'All element IDs in the graph',
       initial: [] as string[],
     },
   ];
 
-  #app: App | null = null;
+  #app!: App;
+  #types = new Map<string, ElementDef>();
+  #elements = new Map<string, ElementImpl>();
 
-  /** 逻辑分组 — edges 先添加到 scene，自然在 nodes 下方 */
-  #edgesGroup = new Group();
-  #nodesGroup = new Group();
-
-  #defs = new Map<string, ElementDef<Record<string, unknown>>>();
-
-  #elements = new Map<string, ElementImpl<Record<string, unknown>>>();
-
-  /** 反向索引：elementId → 依赖它的 element id 集合 */
+  /** node → 依赖它的元素 id 列表 */
   #dependents = new Map<string, Set<string>>();
 
-  /** 批量操作中是否正在进行，防止中间态 syncState / bus emit */
+  /** 批量操作标志 */
   #batching = false;
-  #batchDirty = false;
+  #batchAdded = false;
+  #batchRemoved = false;
 
-  /** edges 子组的引用（只读，供测试/调试用） */
+  /** 场景分组 */
+  #edgesGroup!: Group;
+  #nodesGroup!: Group;
+
   get edgesGroup(): Group {
     return this.#edgesGroup;
   }
-
-  /** nodes 子组的引用（只读，供测试/调试用） */
   get nodesGroup(): Group {
     return this.#nodesGroup;
   }
 
+  // ── Plugin lifecycle ──
+
   install(app: App): void {
     this.#app = app;
 
-    // 按顺序挂载到 default 层：edges 先 → 先遍历/先绘制 → 在下方
-    this.#edgesGroup.name = 'graph:edges';
-    this.#nodesGroup.name = 'graph:nodes';
+    // edges 在下方，nodes 在上方（先添加 edges）
+    this.#edgesGroup = new Group();
+    this.#edgesGroup.setName('__graph_edges__');
     app.scene.add(this.#edgesGroup);
+
+    this.#nodesGroup = new Group();
+    this.#nodesGroup.setName('__graph_nodes__');
     app.scene.add(this.#nodesGroup);
   }
 
-  // ========================
-  // Type Registry
-  // ========================
-
-  /**
-   * 注册 Element 类型。
-   * @param name - 类型名称
-   * @param def - createElement() 返回的定义
-   */
-  register<T>(name: string, def: ElementDef<T>): this {
-    this.#defs.set(name, def as ElementDef<Record<string, unknown>>);
-    return this;
+  dispose(): void {
+    // 清理所有元素
+    for (const el of this.#elements.values()) {
+      el.dispose();
+    }
+    this.#elements.clear();
+    this.#dependents.clear();
+    this.#types.clear();
   }
 
-  /** 是否已注册指定类型 */
-  hasType(name: string): boolean {
-    return this.#defs.has(name);
+  // ── 类型注册 ──
+
+  register(name: string, def: ElementDef): void {
+    this.#types.set(name, def);
   }
 
-  // ========================
-  // CRUD
-  // ========================
+  // ── CRUD ──
 
-  /**
-   * 添加 Element 实例。
-   * 自动实例化、挂载到对应层、跟踪管理。
-   *
-   * @param type - 已注册的类型名称
-   * @param data - 元素数据（id + x/y + 用户自定义字段）
-   * @param options - 可选：layer (挂载层) + deps (依赖列表)
-   * @returns Element 实例
-   */
-  add<T>(type: string, data: ElementData<T>, options?: ElementOptions): Element<T> {
-    if (!this.#app) throw new Error('Graph plugin is not installed. Call app.use(graph) first.');
+  add<T>(type: string, data: T & (NodeBase | EdgeBase), options?: {layer?: string; deps?: string[]}): Element<T> {
+    const def = this.#types.get(type);
+    if (!def) throw new Error(`Unknown element type: "${type}"`);
 
-    const def = this.#defs.get(type);
-    if (!def) throw new Error(`Unknown element type: "${type}". Register it first with graph.register().`);
+    const id = data.id;
+    if (this.#elements.has(id)) throw new Error(`Element "${id}" already exists`);
 
-    if (this.#elements.has(data.id)) {
-      throw new Error(`Element "${data.id}" already exists.`);
+    // 自动派生 layer 和 deps
+    let layer: string;
+    let deps: string[];
+
+    if (def.role === 'edge') {
+      layer = options?.layer ?? 'edges';
+      const edgeData = data as unknown as EdgeBase;
+      deps = options?.deps ?? [edgeData.source, edgeData.target];
+    } else {
+      layer = options?.layer ?? 'nodes';
+      deps = options?.deps ?? [];
     }
 
-    const layer = options?.layer ?? 'nodes';
-    const deps = options?.deps ?? [];
+    const el = new ElementImpl<T>(id, def, data, this, layer, deps, elId => this.notifyUpdate(elId));
 
-    // 实例化
-    const el = new ElementImpl<T>(def as ElementDef<T>, data, this, layer, deps);
-
-    // 注册依赖追踪回调
-    el._setOnUpdate((updatedId: string) => {
-      this.#invalidateDependents(updatedId);
-    });
-
-    // 挂载到对应分组
+    // 挂载到场景
     const targetGroup = layer === 'edges' ? this.#edgesGroup : this.#nodesGroup;
     targetGroup.add(el.group);
-    el._setMounted(true);
 
-    // 建立依赖反向索引
+    this.#elements.set(id, el as unknown as ElementImpl);
+
+    // 注册依赖追踪
     for (const depId of deps) {
-      let set = this.#dependents.get(depId);
-      if (!set) {
-        set = new Set();
-        this.#dependents.set(depId, set);
+      if (!this.#dependents.has(depId)) {
+        this.#dependents.set(depId, new Set());
       }
-      set.add(data.id);
+      this.#dependents.get(depId)!.add(id);
     }
 
-    // 跟踪
-    this.#elements.set(data.id, el as ElementImpl<Record<string, unknown>>);
+    // 通知
     if (!this.#batching) {
       this.#syncState();
-      this.#app.bus.emit('graph:added');
+      this.#app.bus.emit('graph:added', el);
     } else {
-      this.#batchDirty = true;
+      this.#batchAdded = true;
     }
 
-    return el;
+    return el as unknown as Element<T>;
   }
 
-  /**
-   * 移除 Element 实例。
-   * @returns 是否找到并移除
-   */
   remove(id: string): boolean {
     const el = this.#elements.get(id);
     if (!el) return false;
 
-    // 从 scene/层 卸载
-    if (this.#app && el.group.parent) {
-      el.group.parent.remove(el.group);
-    }
-    el.dispose();
-
-    // 清理依赖反向索引
+    // 移除依赖追踪
     for (const depId of el.deps) {
       const set = this.#dependents.get(depId);
       if (set) {
@@ -192,126 +143,122 @@ export class GraphPlugin implements Plugin, GraphQuery {
         if (set.size === 0) this.#dependents.delete(depId);
       }
     }
-    // 也清理以此 element 为依赖目标的反向索引
-    this.#dependents.delete(id);
 
+    // 从场景卸载
+    const parent = el.group.parent;
+    if (parent) {
+      parent.remove(el.group);
+    }
+
+    el.dispose();
     this.#elements.delete(id);
+
     if (!this.#batching) {
       this.#syncState();
-      this.#app?.bus.emit('graph:removed');
+      this.#app.bus.emit('graph:removed', id);
     } else {
-      this.#batchDirty = true;
+      this.#batchRemoved = true;
     }
 
     return true;
   }
 
-  // ========================
-  // Batch Operations
-  // ========================
-
   /**
-   * 批量操作 — 在回调内的 add/remove 不会逐次触发 syncState 和 bus emit。
-   * 回调执行完毕后统一同步一次。
-   *
-   * @example
-   * ```ts
-   * graph.batch(() => {
-   *   graph.add('card', {...});
-   *   graph.add('card', {...});
-   *   graph.add('edge', {...}, { layer: 'edges', deps: [...] });
-   * });
-   * ```
+   * 更新元素并触发依赖链。
+   * 当外部调用 el.update() 时，GraphPlugin 监听不到，所以通过此内部路由。
+   * 但当前设计中 el.update() 直接在 ElementImpl 中执行。
+   * 依赖触发通过 add() 时注册的追踪机制实现。
    */
-  batch(fn: () => void): void {
-    this.#batching = true;
-    this.#batchDirty = false;
-    try {
-      fn();
-    } finally {
-      this.#batching = false;
-      if (this.#batchDirty) {
-        this.#syncState();
-        this.#app?.bus.emit('graph:added');
+  #triggerDependents(id: string): void {
+    const deps = this.#dependents.get(id);
+    if (!deps) return;
+    for (const depId of deps) {
+      const depEl = this.#elements.get(depId);
+      if (depEl) {
+        // 强制重渲染依赖元素（重建子树）
+        depEl.update({} as never);
       }
     }
   }
 
-  // ========================
-  // Query
-  // ========================
+  // ── GraphQuery 实现 ──
 
-  /** 获取 Element 实例 */
-  get<T>(id: string): Element<T> | undefined {
-    return this.#elements.get(id) as Element<T> | undefined;
+  get<T = Record<string, unknown>>(id: string): Element<T> | undefined {
+    return this.#elements.get(id) as unknown as Element<T> | undefined;
   }
 
-  /** 是否存在指定 id 的元素 */
   has(id: string): boolean {
     return this.#elements.has(id);
   }
 
-  /** 所有 element id */
-  getIds(): string[] {
-    return Array.from(this.#elements.keys());
-  }
-
-  /** 所有 Element 实例 */
-  getAll(): Element<Record<string, unknown>>[] {
-    return Array.from(this.#elements.values());
-  }
-
-  /** 元素总数 */
   get count(): number {
     return this.#elements.size;
   }
 
-  // ========================
-  // Lifecycle
-  // ========================
-
-  dispose(): void {
-    for (const el of this.#elements.values()) {
-      if (el.group.parent) {
-        el.group.parent.remove(el.group);
-      }
-      el.dispose();
-    }
-    this.#elements.clear();
-    this.#defs.clear();
-    this.#dependents.clear();
-
-    // 从 scene 移除分组
-    if (this.#edgesGroup.parent) this.#edgesGroup.parent.remove(this.#edgesGroup);
-    if (this.#nodesGroup.parent) this.#nodesGroup.parent.remove(this.#nodesGroup);
-
-    this.#app = null;
+  getIds(): string[] {
+    return [...this.#elements.keys()];
   }
 
-  // ========================
-  // Internal
-  // ========================
+  getAll(): Element[] {
+    return [...this.#elements.values()];
+  }
+
+  getNodes(): Element<NodeBase>[] {
+    return [...this.#elements.values()].filter(el => el.role === 'node') as unknown as Element<NodeBase>[];
+  }
+
+  getEdges(): Element<EdgeBase>[] {
+    return [...this.#elements.values()].filter(el => el.role === 'edge') as unknown as Element<EdgeBase>[];
+  }
+
+  getEdgesOf(nodeId: string): Element<EdgeBase>[] {
+    return [...this.#elements.values()].filter(el => {
+      if (el.role !== 'edge') return false;
+      const data = el.data as unknown as EdgeBase;
+      return data.source === nodeId || data.target === nodeId;
+    }) as unknown as Element<EdgeBase>[];
+  }
+
+  // ── 批量操作 ──
+
+  batch(fn: () => void): void {
+    this.#batching = true;
+    this.#batchAdded = false;
+    this.#batchRemoved = false;
+
+    try {
+      fn();
+    } finally {
+      this.#batching = false;
+      this.#syncState();
+
+      if (this.#batchAdded) {
+        this.#app.bus.emit('graph:added');
+      }
+      if (this.#batchRemoved) {
+        this.#app.bus.emit('graph:removed');
+      }
+    }
+  }
+
+  // ── internal ──
 
   #syncState(): void {
-    if (!this.#app) return;
     this.#app.setState('graph:elements', this.getIds());
   }
 
   /**
-   * 当 elementId 的数据变化时，找出所有 deps 包含它的 element 并重绘。
-   * 使用反向索引 #dependents 实现 O(依赖者数量) 查找，避免全量遍历。
+   * 通知 graph 某个元素已被更新（由 ElementImpl.update 调用的外部入口）。
+   * 这通过在 add 时对 ElementImpl 进行 monkey-patch 来实现。
    */
-  #invalidateDependents(elementId: string): void {
-    const depSet = this.#dependents.get(elementId);
-    if (!depSet) return;
-    for (const depElId of depSet) {
-      const depEl = this.#elements.get(depElId);
-      if (depEl) depEl._invalidate();
-    }
+  notifyUpdate(id: string): void {
+    this.#triggerDependents(id);
   }
 }
 
-/** 创建 Graph 插件实例 */
+/**
+ * 创建 GraphPlugin 实例。
+ */
 export function graphPlugin(): GraphPlugin {
   return new GraphPlugin();
 }

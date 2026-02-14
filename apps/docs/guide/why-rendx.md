@@ -15,7 +15,39 @@ Rendx 的出发点很简单：**用最小的代码体积，覆盖 Canvas 2D 可�
 
 ## 设计哲学
 
-### 1. 够用就好，不做错误抽象
+### 1. 尊重 Canvas 的本质
+
+Canvas 是**即时模式**渲染接口 — 调一次 `fillRect()` 就画一个矩形，没有 DOM 节点、没有样式继承、没有事件冒泡。这不是缺陷，而是设计意图：用最低成本完成图形输出。
+
+一些引擎试图在 Canvas 上重建 DOM — 给每个图形节点挂载事件、模拟 CSS 属性计算、实现 `querySelector` 查询。这本质上是用 JavaScript 重写浏览器内核中 C++ 实现的能力：
+
+- 浏览器的 DOM 树遍历、事件冒泡、样式计算经过了 20 年优化
+- JavaScript 重实现的版本不可能比原生更快
+- 却让每个节点的创建成本从 ~0 增长到 3-5 倍
+
+Rendx 的选择：保留 Canvas 的即时模式本质，只在必要处添加结构（场景图用于管理渲染顺序和变换传播，事件系统用于交互），不模拟 DOM。
+
+### 2. 不做无效封装
+
+有效封装的判断标准很简单：**封装前后，使用者的心智模型是否跨越了抽象层级。**
+
+Three.js 用 `MeshStandardMaterial({ color, roughness })` 封装底层 shader 的 uniform 传递、光照计算、PBR 管线 — 这是**有效封装**，因为使用者从"GPU 指令"跨越到了"材质属性"，两个完全不同的抽象层级。
+
+而在 Canvas 2D 上，原生 API 已经在人类直觉层面操作：
+
+```javascript
+// 原生 Canvas — 人类直觉：「画一个矩形」
+ctx.fillRect(x, y, width, height);
+
+// DSL 封装 — 仍然是：「画一个矩形」
+engine.addShape({type: 'rect', x, y, width, height});
+```
+
+两者在同一个抽象层级。DSL 翻译的价值为零 — 只增加了一层间接调用和一个需要学习的 API。
+
+Rendx 不制造"看起来优雅但实际上只是翻译"的封装。`Node.create('rect', { fill: '#f00' })` 直接映射到 Canvas 原语，没有中间层。
+
+### 3. 够用就好，不做错误抽象
 
 Rendx 不会把 Canvas 包装成 DOM。不提供 `querySelector`、不模拟 CSS 继承、不引入依赖注入容器。
 
@@ -27,7 +59,7 @@ Rendx 不会把 Canvas 包装成 DOM。不提供 `querySelector`、不模拟 CSS
 
 Rendx 直接暴露图形编程原语：`Node.create('circle', { fill: '#f00' })` — 没有中间层。
 
-### 2. 分层不分家
+### 4. 分层不分家
 
 ```
 Layer 0: core / bounding / path / ease     (零依赖)
@@ -39,7 +71,7 @@ Layer 4: engine                             (场景图引擎)
 
 12 个包，每个包职责单一，严格按层级依赖。你可以只用 `rendx-path` 生成 SVG 路径字符串，不引入任何渲染逻辑；也可以只用 `rendx-shape` + `rendx-canvas` 做轻量绑定，跳过场景图。
 
-### 3. 性能来自正确的架构，而非过度优化
+### 5. 性能来自正确的架构，而非过度优化
 
 - **多 Canvas 分层渲染** — 每个 Layer 持有独立 Canvas，互不干扰
 - **三级脏标记** — `dirty`（结构变化）、`needUpdate`（局部矩阵）、`worldMatrixNeedUpdate`（传播标记），精确控制更新粒度
@@ -48,13 +80,36 @@ Layer 4: engine                             (场景图引擎)
 
 这些都不是"黑魔法优化"，而是正确的架构选择。
 
-### 4. 不跨界
+### 6. 不跨界
 
 Canvas 2D 适合 2000-5000 个节点的场景。超过这个量级，正确做法是换 WebGL 引擎（如 PixiJS），而不是在 Canvas 2D 上硬优化。
 
 Rendx 不提供 WebGL 后端，这是有意的取舍。与其做一个"什么都能，什么都不精"的引擎，不如在 Canvas 2D 这个精确区间做到极致的效率比。
 
 同理，Rendx 不做滤镜、不做阴影混合、不做富文本编辑 — 这些在图表/图编辑场景中使用率极低，但实现成本极高。
+
+### 7. 插件是约束边界，不是能力壁垒
+
+Rendx 没有内置图编辑功能（节点管理、连线、撤销重做），不是因为做不到，而是因为这些属于**应用层逻辑**，不应该固化在渲染引擎中。
+
+插件系统的设计目标是**组织代码的边界**，而不是隐藏底层能力：
+
+- `element-plugin` 用 `createNode` / `createEdge` 管理节点生命周期 — 但 render 函数内部直接使用 `Node.create` / `Group.add` 等引擎原生 API
+- `grid-plugin` 用引擎原生的 `Layer` + `Node` 画网格 — 没有引入任何网格专用的抽象
+- `history-plugin` 用 `app.toJSON()` / `restoreFromJSON()` 做快照 — 没有自己的序列化格式
+
+插件不创造新的概念层，只约束代码组织方式。使用者在插件内外写的代码，用的是同一套 API。
+
+### 8. 面向 AI 时代的可预测性
+
+当 AI 辅助编程成为常态，代码库的**可预测性**比"功能丰富度"更重要：
+
+- **概念少** — Rendx 核心只有 5 个概念：App、Scene、Layer、Group、Node。不需要理解 DI 容器、CSS 属性继承树、虚拟 DOM diff 算法
+- **无隐式行为** — `Node.create('rect', { fill: '#f00' })` 就是创建一个矩形节点。没有自动布局、没有样式继承、没有全局状态注入
+- **线性调用链** — 创建 → 设置属性 → 添加到场景图 → 渲染。每一步的输入/输出都是确定的
+- **类型完备** — TypeScript strict 模式，所有 API 都有精确的类型签名
+
+对 AI 来说，能通过类型签名推断出正确调用方式的 API，比需要阅读大量文档才能理解隐式约定的 API，生产力高一个数量级。
 
 ## 横向对比
 

@@ -1,38 +1,51 @@
-/**
- * ElementImpl — Element 实例的内部实现。
- *
- * 管理 data ↔ Group 子树的绑定：
- * - 创建时：new Group → translate → 调用 render fn 填充子树
- * - update 时：合并 data → 仅位移变化走 translate，其他走重建（清空 children → 重跑 fn）
- * - dispose 时：调用 cleanup → 清空 children
- *
- * 不直接操作 scene 挂载/卸载 —— 那是 Graph 的职责。
- */
-
 import {Group} from 'rendx-engine';
 
-import type {Element, ElementBase, ElementContext, ElementData, ElementDef, GraphQuery} from './types';
+import type {Element, ElementDef, NodeBase, EdgeBase, NodeContext, EdgeContext, GraphQuery} from './types';
 
-/** 依赖更新回调 — 由 Graph 注入，用于触发依赖者重绘 */
-export type OnUpdateCallback = (id: string) => void;
-
+/**
+ * ElementImpl — 元素运行时实例。
+ *
+ * - Node: translate(x, y)，仅位移变化时 skip rebuild
+ * - Edge: 不 translate，render 时自动注入 source/target
+ */
 export class ElementImpl<T = Record<string, unknown>> implements Element<T> {
+  readonly id: string;
+  readonly role: 'node' | 'edge';
   readonly group: Group;
-  readonly layer: 'nodes' | 'edges';
-  readonly deps: ReadonlyArray<string>;
+  readonly layer: string;
+  readonly deps: string[];
 
-  #def: ElementDef<T>;
-  #data: ElementData<T>;
+  #data: T & (NodeBase | EdgeBase);
+  #def: ElementDef;
   #graph: GraphQuery;
-  #cleanups: (() => void)[] = [];
+  #cleanup: (() => void) | null = null;
   #mounted = false;
-  #onUpdate: OnUpdateCallback | null = null;
+  #onUpdate: ((id: string) => void) | null;
 
-  get id(): string {
-    return this.#data.id;
+  constructor(id: string, def: ElementDef, data: T & (NodeBase | EdgeBase), graph: GraphQuery, layer: string, deps: string[], onUpdate?: (id: string) => void) {
+    this.id = id;
+    this.role = def.role;
+    this.#def = def;
+    this.#data = {...data};
+    this.#graph = graph;
+    this.layer = layer;
+    this.deps = deps;
+    this.#onUpdate = onUpdate ?? null;
+
+    this.group = new Group();
+    this.group.setName(id);
+
+    // Node: 设置初始位置
+    if (def.role === 'node') {
+      const nd = this.#data as NodeBase;
+      this.group.translate(nd.x, nd.y);
+    }
+
+    this.#render();
+    this.#mounted = true;
   }
 
-  get data(): Readonly<ElementData<T>> {
+  get data(): T & (NodeBase | EdgeBase) {
     return this.#data;
   }
 
@@ -40,53 +53,48 @@ export class ElementImpl<T = Record<string, unknown>> implements Element<T> {
     return this.#mounted;
   }
 
-  constructor(def: ElementDef<T>, data: ElementData<T>, graph: GraphQuery, layer: 'nodes' | 'edges' = 'nodes', deps: string[] = []) {
-    this.#def = def;
-    this.#data = {...data};
-    this.#graph = graph;
-    this.layer = layer;
-    this.deps = deps;
-
-    // 创建 Group 容器，设置名称和初始位移
-    this.group = new Group();
-    this.group.name = data.id;
-    this.group.translate(data.x, data.y);
-
-    // 首次渲染
-    this.#render();
-  }
-
-  // ========================
-  // Lifecycle
-  // ========================
-
-  update(partial: Partial<ElementData<T>>): void {
-    const prev = this.#data;
-
-    // 合并数据（id 不可变）
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const {id: _, ...rest} = partial as Partial<ElementBase> & Record<string, unknown>;
-    this.#data = {...this.#data, ...rest} as ElementData<T>;
-
-    // 仅位移变化 → 不重建子树，只更新 translate
-    if (this.#isPositionOnlyChange(prev, partial)) {
-      this.group.translate(this.#data.x, this.#data.y);
-      // 位移也要通知依赖者（edge 需要跟随 node 移动）
-      this.#onUpdate?.(this.#data.id);
-      return;
+  /**
+   * 部分更新数据。
+   * - id 不可变
+   * - Node: 仅 x/y 变化 → translate only（不重建子树）
+   * - Edge: source/target 变化时忽略（deps 已静态绑定）
+   */
+  update(patch: Partial<T>): void {
+    // id 不可变
+    if ('id' in patch) {
+      delete (patch as Record<string, unknown>).id;
     }
 
-    // 位移可能也变了，先更新 translate
-    if (partial.x !== undefined || partial.y !== undefined) {
-      this.group.translate(this.#data.x, this.#data.y);
+    const merged = {...this.#data, ...patch} as T & (NodeBase | EdgeBase);
+
+    if (this.role === 'node') {
+      const oldData = this.#data as NodeBase;
+      const newData = merged as NodeBase;
+
+      // 只有 x/y 变了 → position-only 优化
+      const positionOnly = isPositionOnlyChange(oldData, newData, patch as Record<string, unknown>);
+
+      this.#data = merged;
+
+      if (positionOnly) {
+        this.group.translate(newData.x - oldData.x, newData.y - oldData.y);
+        this.#onUpdate?.(this.id);
+        return;
+      }
+
+      // 位置也可能变了，需更新 translate
+      if (newData.x !== oldData.x || newData.y !== oldData.y) {
+        this.group.translate(newData.x - oldData.x, newData.y - oldData.y);
+      }
+    } else {
+      this.#data = merged;
     }
 
-    // 重建子树
+    // 数据变化 → 重建子树
     this.#teardown();
+    this.group.removeChildren();
     this.#render();
-
-    // 通知 graph 本 element 已更新，触发依赖者重绘
-    this.#onUpdate?.(this.#data.id);
+    this.#onUpdate?.(this.id);
   }
 
   dispose(): void {
@@ -95,56 +103,62 @@ export class ElementImpl<T = Record<string, unknown>> implements Element<T> {
     this.#mounted = false;
   }
 
-  // ── 供 Graph 内部调用 ──
+  // ── internal ──
 
-  /** @internal */
-  _setMounted(mounted: boolean): void {
-    this.#mounted = mounted;
-  }
-
-  /** @internal 注册更新回调（由 Graph 调用） */
-  _setOnUpdate(cb: OnUpdateCallback): void {
-    this.#onUpdate = cb;
-  }
-
-  /** @internal 依赖的 element 变了，重建子树（不改 data） */
-  _invalidate(): void {
-    this.#teardown();
-    this.#render();
-  }
-
-  // ========================
-  // Internal
-  // ========================
-
-  /** 执行 render fn 填充 group */
   #render(): void {
-    this.#cleanups = [];
-
-    const ctx: ElementContext = {
-      group: this.group,
-      width: this.#data.width ?? 0,
-      height: this.#data.height ?? 0,
-      onCleanup: (fn: () => void) => {
-        this.#cleanups.push(fn);
-      },
+    let cleanup: (() => void) | null = null;
+    const onCleanup = (fn: () => void) => {
+      cleanup = fn;
     };
 
-    this.#def.render(ctx, this.#data, this.#graph);
-  }
-
-  /** 调用 cleanup 回调 + 清空 children */
-  #teardown(): void {
-    for (const fn of this.#cleanups) {
-      fn();
+    if (this.#def.role === 'node') {
+      const nd = this.#data as T & NodeBase;
+      const ctx: NodeContext = {
+        group: this.group,
+        width: nd.width ?? 0,
+        height: nd.height ?? 0,
+        onCleanup,
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (this.#def.render as any)(ctx, nd, this.#graph);
+    } else {
+      const ed = this.#data as T & EdgeBase;
+      const ctx: EdgeContext = {
+        group: this.group,
+        source: this.#graph.get<NodeBase>(ed.source),
+        target: this.#graph.get<NodeBase>(ed.target),
+        onCleanup,
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (this.#def.render as any)(ctx, ed, this.#graph);
     }
-    this.#cleanups = [];
-    this.group.removeChildren();
+
+    this.#cleanup = cleanup;
   }
 
-  /** 判断是否只有 x/y 变化 */
-  #isPositionOnlyChange(_prev: ElementData<T>, partial: Partial<ElementData<T>>): boolean {
-    const keys = Object.keys(partial) as (keyof ElementData<T>)[];
-    return keys.every(k => k === 'x' || k === 'y');
+  #teardown(): void {
+    if (this.#cleanup) {
+      this.#cleanup();
+      this.#cleanup = null;
+    }
   }
+}
+
+// ── helpers ──
+
+function isPositionOnlyChange(oldData: NodeBase, newData: NodeBase, patch: Record<string, unknown>): boolean {
+  const keys = Object.keys(patch);
+  if (keys.length === 0) return false;
+
+  for (const key of keys) {
+    if (key === 'x' || key === 'y') continue;
+    // 有非 x/y 的 key 且值变了
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((oldData as any)[key] !== (newData as any)[key]) {
+      return false;
+    }
+  }
+
+  // 至少 x 或 y 变了
+  return oldData.x !== newData.x || oldData.y !== newData.y;
 }

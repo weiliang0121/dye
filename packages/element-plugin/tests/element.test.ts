@@ -18,20 +18,20 @@ vi.mock('rendx-svg', () => ({
 }));
 
 import {App, Group, Node} from 'rendx-engine';
-import {createElement} from '../src/create';
+import {createNode, createEdge} from '../src/create';
 import {graphPlugin} from '../src/graph';
 
 import type {GraphPlugin} from '../src/graph';
-import type {Element} from '../src/types';
+import type {Element, NodeBase, EdgeBase} from '../src/types';
 
 // ── 测试用的 Element 类型定义 ──
 
-interface CardData {
+interface CardData extends NodeBase {
   title: string;
   color?: string;
 }
 
-const Card = createElement<CardData>((ctx, data) => {
+const Card = createNode<CardData>((ctx, data) => {
   const bg = Node.create('rect', {fill: data.color ?? '#ffffff', stroke: '#333'});
   bg.shape.from(0, 0, ctx.width, ctx.height);
   bg.name = '__bg__';
@@ -43,12 +43,12 @@ const Card = createElement<CardData>((ctx, data) => {
   ctx.group.add(label);
 });
 
-interface ListData {
+interface ListData extends NodeBase {
   header: string;
   rows: {id: string; label: string}[];
 }
 
-const ListNode = createElement<ListData>((ctx, data) => {
+const ListNode = createNode<ListData>((ctx, data) => {
   const rowHeight = 30;
   const headerHeight = 30;
   const totalHeight = headerHeight + data.rows.length * rowHeight;
@@ -72,20 +72,57 @@ const ListNode = createElement<ListData>((ctx, data) => {
   });
 });
 
+interface SimpleEdgeData extends EdgeBase {
+  color?: string;
+}
+
+const SimpleEdge = createEdge<SimpleEdgeData>((ctx, data) => {
+  const src = ctx.source;
+  const tgt = ctx.target;
+  if (!src || !tgt) return;
+
+  const srcData = src.data as CardData;
+  const tgtData = tgt.data as CardData;
+
+  const sx = srcData.x + (srcData.width ?? 0);
+  const sy = srcData.y + (srcData.height ?? 0) / 2;
+  const tx = tgtData.x;
+  const ty = tgtData.y + (tgtData.height ?? 0) / 2;
+
+  const line = Node.create('line', {stroke: data.color ?? '#999'});
+  line.shape.from(sx, sy, tx, ty);
+  line.name = '__edge__';
+  ctx.group.add(line);
+});
+
 // ══════════════════════════════════════════════════════════════
 // Tests
 // ══════════════════════════════════════════════════════════════
 
-describe('createElement', () => {
-  it('返回 ElementDef 标记', () => {
+describe('createNode / createEdge', () => {
+  it('createNode 返回 NodeDef 标记', () => {
     expect(Card.__element_def__).toBe(true);
+    expect(Card.role).toBe('node');
     expect(typeof Card.render).toBe('function');
   });
 
+  it('createEdge 返回 EdgeDef 标记', () => {
+    expect(SimpleEdge.__element_def__).toBe(true);
+    expect(SimpleEdge.role).toBe('edge');
+    expect(typeof SimpleEdge.render).toBe('function');
+  });
+
   it('不同定义是独立对象', () => {
-    const A = createElement(() => {});
-    const B = createElement(() => {});
+    const A = createNode(() => {});
+    const B = createNode(() => {});
     expect(A).not.toBe(B);
+  });
+
+  it('Node 和 Edge 定义是不同 role', () => {
+    const N = createNode(() => {});
+    const E = createEdge(() => {});
+    expect(N.role).toBe('node');
+    expect(E.role).toBe('edge');
   });
 });
 
@@ -103,6 +140,7 @@ describe('Element 实例', () => {
     app.use(graph);
     graph.register('card', Card);
     graph.register('list', ListNode);
+    graph.register('edge', SimpleEdge);
 
     return () => {
       app.dispose();
@@ -114,18 +152,27 @@ describe('Element 实例', () => {
   // 创建
   // ========================
   describe('创建', () => {
-    it('add 返回 Element 实例', () => {
+    it('add node 返回 Element 实例', () => {
       const el = graph.add('card', {id: 'c1', x: 100, y: 50, width: 200, height: 80, title: 'Hello'});
       expect(el.id).toBe('c1');
+      expect(el.role).toBe('node');
       expect(el.group).toBeInstanceOf(Group);
       expect(el.mounted).toBe(true);
     });
 
-    it('group 自动设置 name 和 translate', () => {
+    it('node group 自动设置 name 和 translate', () => {
       const el = graph.add('card', {id: 'c1', x: 100, y: 50, width: 200, height: 80, title: 'Test'});
       expect(el.group.name).toBe('c1');
       expect(el.group.translation[0]).toBe(100);
       expect(el.group.translation[1]).toBe(50);
+    });
+
+    it('edge group 不设置 translate', () => {
+      graph.add('card', {id: 'n1', x: 0, y: 0, width: 100, height: 60, title: 'A'});
+      graph.add('card', {id: 'n2', x: 300, y: 0, width: 100, height: 60, title: 'B'});
+      const edge = graph.add('edge', {id: 'e1', source: 'n1', target: 'n2'});
+      expect(edge.group.translation[0]).toBe(0);
+      expect(edge.group.translation[1]).toBe(0);
     });
 
     it('render fn 正确填充 group children', () => {
@@ -143,7 +190,7 @@ describe('Element 实例', () => {
     it('data 快照', () => {
       const el = graph.add('card', {id: 'c1', x: 10, y: 20, width: 100, height: 60, title: 'Snap'});
       expect(el.data.x).toBe(10);
-      expect(el.data.title).toBe('Snap');
+      expect((el.data as CardData).title).toBe('Snap');
     });
 
     it('重复 id 抛错', () => {
@@ -154,13 +201,27 @@ describe('Element 实例', () => {
     it('未注册类型抛错', () => {
       expect(() => graph.add('unknown', {id: 'x', x: 0, y: 0})).toThrowError(/Unknown element type/);
     });
+
+    it('edge render fn 接收 ctx.source 和 ctx.target', () => {
+      graph.add('card', {id: 'n1', x: 0, y: 0, width: 100, height: 60, title: 'A'});
+      graph.add('card', {id: 'n2', x: 300, y: 0, width: 100, height: 60, title: 'B'});
+      const edge = graph.add('edge', {id: 'e1', source: 'n1', target: 'n2'});
+      expect(edge.group.find('__edge__')).toBeDefined();
+      expect(edge.group.children).toHaveLength(1);
+    });
+
+    it('edge source 不存在时 ctx.source 为 undefined', () => {
+      const edge = graph.add('edge', {id: 'e1', source: 'missing', target: 'also-missing'});
+      // render fn 中 src/tgt undefined → return → 0 children
+      expect(edge.group.children).toHaveLength(0);
+    });
   });
 
   // ========================
   // 更新
   // ========================
   describe('更新', () => {
-    it('仅位移变化不重建子树', () => {
+    it('仅位移变化不重建子树 (position-only)', () => {
       const el = graph.add('card', {id: 'c1', x: 0, y: 0, width: 200, height: 80, title: 'Move'});
       const firstBg = el.group.find('__bg__');
       el.update({x: 50, y: 60});
@@ -174,8 +235,8 @@ describe('Element 实例', () => {
     it('数据变化触发重建', () => {
       const el = graph.add('card', {id: 'c1', x: 0, y: 0, width: 200, height: 80, title: 'Old'});
       const firstBg = el.group.find('__bg__');
-      el.update({title: 'New'});
-      expect(el.data.title).toBe('New');
+      el.update({title: 'New'} as Partial<CardData>);
+      expect((el.data as CardData).title).toBe('New');
       // 子节点重建（不同引用）
       expect(el.group.find('__bg__')).not.toBe(firstBg);
     });
@@ -195,7 +256,7 @@ describe('Element 实例', () => {
 
     it('update 时 cleanup 被调用', () => {
       const cleanup = vi.fn();
-      const WithCleanup = createElement<{val: number}>(ctx => {
+      const WithCleanup = createNode<NodeBase & {val: number}>(ctx => {
         const n = Node.create('rect', {fill: '#000'});
         n.shape.from(0, 0, ctx.width, ctx.height);
         ctx.group.add(n);
@@ -205,6 +266,24 @@ describe('Element 实例', () => {
       const el = graph.add('cleanup', {id: 'cl', x: 0, y: 0, width: 100, height: 60, val: 1});
       expect(cleanup).not.toHaveBeenCalled();
       el.update({val: 2});
+      expect(cleanup).toHaveBeenCalledOnce();
+    });
+
+    it('edge cleanup 在更新时被调用', () => {
+      const cleanup = vi.fn();
+      const CleanEdge = createEdge<EdgeBase>(ctx => {
+        const n = Node.create('rect', {fill: '#000'});
+        n.shape.from(0, 0, 10, 10);
+        ctx.group.add(n);
+        ctx.onCleanup(cleanup);
+      });
+      graph.register('clean-edge', CleanEdge);
+      graph.add('card', {id: 'n1', x: 0, y: 0, width: 100, height: 60, title: 'A'});
+      graph.add('card', {id: 'n2', x: 200, y: 0, width: 100, height: 60, title: 'B'});
+      const el = graph.add('clean-edge', {id: 'ce1', source: 'n1', target: 'n2'});
+      expect(cleanup).not.toHaveBeenCalled();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      el.update({color: 'red'} as any);
       expect(cleanup).toHaveBeenCalledOnce();
     });
   });
@@ -304,7 +383,7 @@ describe('Element 实例', () => {
 
     it('dispose 调用 cleanup', () => {
       const cleanup = vi.fn();
-      const WithCleanup = createElement(ctx => {
+      const WithCleanup = createNode(ctx => {
         const n = Node.create('rect', {fill: '#000'});
         n.shape.from(0, 0, 10, 10);
         ctx.group.add(n);
@@ -362,6 +441,15 @@ describe('Element 实例', () => {
       const el2 = graph.get<CardData>('c2')!;
       expect(el2.data.title).toBe('B');
     });
+
+    it('node 和 edge 混合', () => {
+      graph.add('card', {id: 'n1', x: 0, y: 0, width: 100, height: 60, title: 'A'});
+      graph.add('card', {id: 'n2', x: 300, y: 0, width: 100, height: 60, title: 'B'});
+      graph.add('edge', {id: 'e1', source: 'n1', target: 'n2'});
+      expect(graph.count).toBe(3);
+      expect(graph.get('e1')!.role).toBe('edge');
+      expect(graph.get('n1')!.role).toBe('node');
+    });
   });
 
   // ========================
@@ -374,11 +462,11 @@ describe('Element 实例', () => {
       expect(graph.count).toBe(1);
 
       // Read
-      expect(el.data.title).toBe('Start');
+      expect((el.data as CardData).title).toBe('Start');
 
       // Update
-      el.update({x: 100, title: 'Updated'});
-      expect(el.data.title).toBe('Updated');
+      el.update({x: 100, title: 'Updated'} as Partial<CardData>);
+      expect((el.data as CardData).title).toBe('Updated');
 
       // Delete
       graph.remove('c1');
@@ -386,8 +474,7 @@ describe('Element 实例', () => {
     });
 
     it('render fn 可使用 Node.create 等 engine 原生 API', () => {
-      const Custom = createElement<{label: string}>((ctx, data) => {
-        // 使用多种 engine 原生 shape
+      const Custom = createNode<NodeBase & {label: string}>((ctx, data) => {
         const circle = Node.create('circle', {fill: '#ff0000'});
         circle.shape.from(ctx.width / 2, ctx.height / 2, 20);
         ctx.group.add(circle);
@@ -420,7 +507,6 @@ describe('Element 实例', () => {
         ],
       }) as Element<ListData>;
 
-      // 结构正确
       expect(el.group.find('__bg__')).toBeDefined();
       expect(el.group.find('__header__')).toBeDefined();
       expect(el.group.find('__row-in1__')).toBeDefined();
@@ -430,7 +516,7 @@ describe('Element 实例', () => {
 
     it('render fn 第三参数 graph 可查询其他元素', () => {
       const spy = vi.fn();
-      const Probe = createElement<{target: string}>((ctx, data, graph) => {
+      const Probe = createNode<NodeBase & {target: string}>((ctx, data, graph) => {
         const other = graph.get(data.target);
         spy(other?.id, graph.count);
       });
@@ -443,64 +529,9 @@ describe('Element 实例', () => {
       expect(spy).toHaveBeenCalledWith('c1', 1);
     });
 
-    it('Edge element — render fn 通过 graph 获取两端 node', () => {
-      interface EdgeData {
-        source: string;
-        target: string;
-      }
-
-      const Edge = createElement<EdgeData>((_ctx, data, graph) => {
-        const src = graph.get(data.source);
-        const tgt = graph.get(data.target);
-        if (!src || !tgt) return;
-
-        // 从 source 右边中点 → target 左边中点画线
-        const sx = src.data.x + (src.data.width ?? 0);
-        const sy = src.data.y + (src.data.height ?? 0) / 2;
-        const tx = tgt.data.x;
-        const ty = tgt.data.y + (tgt.data.height ?? 0) / 2;
-
-        const line = Node.create('line', {stroke: '#999'});
-        line.shape.from(sx - data.x, sy - data.y, tx - data.x, ty - data.y);
-        line.name = '__edge__';
-        _ctx.group.add(line);
-      });
-
-      graph.register('edge', Edge);
-
-      graph.add('card', {id: 'n1', x: 0, y: 0, width: 100, height: 60, title: 'Node1'});
-      graph.add('card', {id: 'n2', x: 300, y: 100, width: 100, height: 60, title: 'Node2'});
-      const edge = graph.add('edge', {id: 'e1', x: 0, y: 0, source: 'n1', target: 'n2'});
-
-      expect(edge.group.find('__edge__')).toBeDefined();
-      expect(edge.group.children).toHaveLength(1);
-    });
-
-    it('Edge element — source 不存在时优雅跳过', () => {
-      interface EdgeData {
-        source: string;
-        target: string;
-      }
-
-      const Edge = createElement<EdgeData>((_ctx, data, graph) => {
-        const src = graph.get(data.source);
-        const tgt = graph.get(data.target);
-        if (!src || !tgt) return;
-        const line = Node.create('line', {stroke: '#999'});
-        line.shape.from(0, 0, 100, 100);
-        _ctx.group.add(line);
-      });
-
-      graph.register('edge', Edge);
-
-      // source 不存在，render 中 return 了
-      const edge = graph.add('edge', {id: 'e1', x: 0, y: 0, source: 'missing', target: 'also-missing'});
-      expect(edge.group.children).toHaveLength(0);
-    });
-
     it('graph.getAll / getIds / has / count 在 render fn 中可用', () => {
       const results: {ids: string[]; count: number; hasC1: boolean} = {ids: [], count: 0, hasC1: false};
-      const Inspector = createElement((_ctx, _data, graph) => {
+      const Inspector = createNode((_ctx, _data, graph) => {
         results.ids = graph.getIds();
         results.count = graph.count;
         results.hasC1 = graph.has('c1');
@@ -510,7 +541,6 @@ describe('Element 实例', () => {
       graph.add('card', {id: 'c1', x: 0, y: 0, width: 100, height: 60, title: 'A'});
       graph.add('inspector', {id: 'insp', x: 0, y: 0});
 
-      // render 时 inspector 自身尚未加入 graph
       expect(results.hasC1).toBe(true);
       expect(results.count).toBe(1);
       expect(results.ids).toContain('c1');
@@ -521,30 +551,36 @@ describe('Element 实例', () => {
   // 分层渲染
   // ========================
   describe('分层渲染', () => {
-    it('默认 layer 为 nodes', () => {
+    it('node 默认 layer 为 nodes', () => {
       const el = graph.add('card', {id: 'c1', x: 0, y: 0, width: 100, height: 60, title: 'A'});
       expect(el.layer).toBe('nodes');
     });
 
-    it('layer: edges 挂载到 edgesGroup', () => {
-      const Stub = createElement(() => {});
-      graph.register('edge', Stub);
-
-      const el = graph.add('edge', {id: 'e1', x: 0, y: 0}, {layer: 'edges'});
+    it('edge 默认 layer 为 edges', () => {
+      graph.add('card', {id: 'n1', x: 0, y: 0, width: 100, height: 60, title: 'A'});
+      graph.add('card', {id: 'n2', x: 200, y: 0, width: 100, height: 60, title: 'B'});
+      const el = graph.add('edge', {id: 'e1', source: 'n1', target: 'n2'});
       expect(el.layer).toBe('edges');
+    });
 
-      // group 应挂载到 edgesGroup 内
-      expect(graph.edgesGroup.children).toContain(el.group);
+    it('node group 挂载到 nodesGroup', () => {
+      const n = graph.add('card', {id: 'n1', x: 0, y: 0, width: 100, height: 60, title: 'A'});
+      expect(graph.nodesGroup.children).toContain(n.group);
+    });
+
+    it('edge group 挂载到 edgesGroup', () => {
+      graph.add('card', {id: 'n1', x: 0, y: 0, width: 100, height: 60, title: 'A'});
+      graph.add('card', {id: 'n2', x: 200, y: 0, width: 100, height: 60, title: 'B'});
+      const e = graph.add('edge', {id: 'e1', source: 'n1', target: 'n2'});
+      expect(graph.edgesGroup.children).toContain(e.group);
     });
 
     it('nodes 和 edges 分组是独立的', () => {
-      const Stub = createElement(() => {});
-      graph.register('edge', Stub);
+      graph.add('card', {id: 'n1', x: 0, y: 0, width: 100, height: 60, title: 'A'});
+      graph.add('card', {id: 'n2', x: 200, y: 0, width: 100, height: 60, title: 'B'});
+      const n = graph.get('n1')!;
+      const e = graph.add('edge', {id: 'e1', source: 'n1', target: 'n2'});
 
-      const n = graph.add('card', {id: 'n1', x: 0, y: 0, width: 100, height: 60, title: 'A'});
-      const e = graph.add('edge', {id: 'e1', x: 0, y: 0}, {layer: 'edges'});
-
-      // 各自在不同分组
       expect(graph.nodesGroup.children).toContain(n.group);
       expect(graph.edgesGroup.children).toContain(e.group);
       expect(graph.nodesGroup.children).not.toContain(e.group);
@@ -552,11 +588,9 @@ describe('Element 实例', () => {
     });
 
     it('不创建额外的 Canvas 层', () => {
-      // graph 插件不应该声明自己的 layers
       expect(app.getLayer('graph:edges')).toBeUndefined();
       expect(app.getLayer('graph:nodes')).toBeUndefined();
 
-      // 分组都挂载在 default 层下
       const defaultLayer = app.getLayer('default')!;
       expect(defaultLayer).toBeDefined();
       expect(defaultLayer.children).toContain(graph.edgesGroup);
@@ -568,18 +602,14 @@ describe('Element 实例', () => {
   // 依赖追踪
   // ========================
   describe('依赖追踪', () => {
-    it('deps 存储在 element 上', () => {
-      const Stub = createElement(() => {});
-      graph.register('edge', Stub);
-
+    it('edge 自动从 source/target 派生 deps', () => {
       graph.add('card', {id: 'n1', x: 0, y: 0, width: 100, height: 60, title: 'A'});
       graph.add('card', {id: 'n2', x: 200, y: 0, width: 100, height: 60, title: 'B'});
-      const edge = graph.add('edge', {id: 'e1', x: 0, y: 0}, {layer: 'edges', deps: ['n1', 'n2']});
-
+      const edge = graph.add('edge', {id: 'e1', source: 'n1', target: 'n2'});
       expect(edge.deps).toEqual(['n1', 'n2']);
     });
 
-    it('默认 deps 为空数组', () => {
+    it('node 默认 deps 为空数组', () => {
       const el = graph.add('card', {id: 'c1', x: 0, y: 0, width: 100, height: 60, title: 'A'});
       expect(el.deps).toEqual([]);
     });
@@ -587,23 +617,20 @@ describe('Element 实例', () => {
     it('node 移动时 edge 自动重绘', () => {
       const renderSpy = vi.fn();
 
-      interface EdgeData {
-        source: string;
-        target: string;
-      }
-
-      const Edge = createElement<EdgeData>((_ctx, data, graph) => {
+      const SpyEdge = createEdge<SimpleEdgeData>(ctx => {
         renderSpy();
-        const src = graph.get(data.source);
-        const tgt = graph.get(data.target);
-        if (!src || !tgt) return;
+        // minimal render
+        if (ctx.source && ctx.target) {
+          const line = Node.create('line', {stroke: '#999'});
+          line.shape.from(0, 0, 100, 100);
+          ctx.group.add(line);
+        }
       });
-
-      graph.register('edge', Edge);
+      graph.register('spy-edge', SpyEdge);
 
       const n1 = graph.add('card', {id: 'n1', x: 0, y: 0, width: 100, height: 60, title: 'A'});
       graph.add('card', {id: 'n2', x: 300, y: 0, width: 100, height: 60, title: 'B'});
-      graph.add('edge', {id: 'e1', x: 0, y: 0, source: 'n1', target: 'n2'}, {layer: 'edges', deps: ['n1', 'n2']});
+      graph.add('spy-edge', {id: 'e1', source: 'n1', target: 'n2'});
 
       // 首次渲染 = 1 次
       expect(renderSpy).toHaveBeenCalledTimes(1);
@@ -615,38 +642,40 @@ describe('Element 实例', () => {
 
     it('node 数据更新也触发 edge 重绘', () => {
       const renderSpy = vi.fn();
-      const Stub = createElement(() => renderSpy());
-      graph.register('edge', Stub);
+      const SpyEdge = createEdge(() => renderSpy());
+      graph.register('spy-edge2', SpyEdge);
 
       const n1 = graph.add('card', {id: 'n1', x: 0, y: 0, width: 100, height: 60, title: 'A'});
-      graph.add('edge', {id: 'e1', x: 0, y: 0}, {layer: 'edges', deps: ['n1']});
+      graph.add('card', {id: 'n2', x: 200, y: 0, width: 100, height: 60, title: 'B'});
+      graph.add('spy-edge2', {id: 'e1', source: 'n1', target: 'n2'});
 
       expect(renderSpy).toHaveBeenCalledTimes(1);
-      n1.update({title: 'Updated'});
+      n1.update({title: 'Updated'} as Partial<CardData>);
       expect(renderSpy).toHaveBeenCalledTimes(2);
     });
 
     it('无 deps 的元素更新不触发其他元素', () => {
       const renderSpy = vi.fn();
-      const Stub = createElement(() => renderSpy());
-      graph.register('follower', Stub);
+      const Follower = createNode(() => renderSpy());
+      graph.register('follower', Follower);
 
       const n1 = graph.add('card', {id: 'n1', x: 0, y: 0, width: 100, height: 60, title: 'A'});
       graph.add('follower', {id: 'f1', x: 0, y: 0});
 
       expect(renderSpy).toHaveBeenCalledTimes(1);
       n1.update({x: 100});
-      // follower 没有 deps:['n1']，不会重绘
+      // follower 没有 dep 到 n1，不会重绘
       expect(renderSpy).toHaveBeenCalledTimes(1);
     });
 
     it('remove 清理依赖追踪', () => {
       const renderSpy = vi.fn();
-      const Stub = createElement(() => renderSpy());
-      graph.register('edge', Stub);
+      const SpyEdge = createEdge(() => renderSpy());
+      graph.register('spy-edge3', SpyEdge);
 
       const n1 = graph.add('card', {id: 'n1', x: 0, y: 0, width: 100, height: 60, title: 'A'});
-      graph.add('edge', {id: 'e1', x: 0, y: 0}, {layer: 'edges', deps: ['n1']});
+      graph.add('card', {id: 'n2', x: 200, y: 0, width: 100, height: 60, title: 'B'});
+      graph.add('spy-edge3', {id: 'e1', source: 'n1', target: 'n2'});
 
       expect(renderSpy).toHaveBeenCalledTimes(1);
 
@@ -660,14 +689,15 @@ describe('Element 实例', () => {
       const spy1 = vi.fn();
       const spy2 = vi.fn();
 
-      const Edge1 = createElement(() => spy1());
-      const Edge2 = createElement(() => spy2());
+      const Edge1 = createEdge(() => spy1());
+      const Edge2 = createEdge(() => spy2());
       graph.register('edge1', Edge1);
       graph.register('edge2', Edge2);
 
       const n1 = graph.add('card', {id: 'n1', x: 0, y: 0, width: 100, height: 60, title: 'A'});
-      graph.add('edge1', {id: 'e1', x: 0, y: 0}, {deps: ['n1']});
-      graph.add('edge2', {id: 'e2', x: 0, y: 0}, {deps: ['n1']});
+      graph.add('card', {id: 'n2', x: 200, y: 0, width: 100, height: 60, title: 'B'});
+      graph.add('edge1', {id: 'e1', source: 'n1', target: 'n2'});
+      graph.add('edge2', {id: 'e2', source: 'n1', target: 'n2'});
 
       expect(spy1).toHaveBeenCalledTimes(1);
       expect(spy2).toHaveBeenCalledTimes(1);
@@ -676,6 +706,73 @@ describe('Element 实例', () => {
 
       expect(spy1).toHaveBeenCalledTimes(2);
       expect(spy2).toHaveBeenCalledTimes(2);
+    });
+
+    it('手动指定 deps 覆盖自动派生', () => {
+      const renderSpy = vi.fn();
+      const ManualDep = createNode(() => renderSpy());
+      graph.register('manual', ManualDep);
+
+      const n1 = graph.add('card', {id: 'n1', x: 0, y: 0, width: 100, height: 60, title: 'A'});
+      graph.add('manual', {id: 'f1', x: 0, y: 0}, {deps: ['n1']});
+
+      expect(renderSpy).toHaveBeenCalledTimes(1);
+      n1.update({x: 100});
+      expect(renderSpy).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  // ========================
+  // Graph 查询
+  // ========================
+  describe('Graph 查询', () => {
+    it('getNodes 只返回 node 角色的元素', () => {
+      graph.add('card', {id: 'n1', x: 0, y: 0, width: 100, height: 60, title: 'A'});
+      graph.add('card', {id: 'n2', x: 200, y: 0, width: 100, height: 60, title: 'B'});
+      graph.add('edge', {id: 'e1', source: 'n1', target: 'n2'});
+
+      const nodes = graph.getNodes();
+      expect(nodes).toHaveLength(2);
+      expect(nodes.every(n => n.role === 'node')).toBe(true);
+    });
+
+    it('getEdges 只返回 edge 角色的元素', () => {
+      graph.add('card', {id: 'n1', x: 0, y: 0, width: 100, height: 60, title: 'A'});
+      graph.add('card', {id: 'n2', x: 200, y: 0, width: 100, height: 60, title: 'B'});
+      graph.add('edge', {id: 'e1', source: 'n1', target: 'n2'});
+      graph.add('edge', {id: 'e2', source: 'n2', target: 'n1'});
+
+      const edges = graph.getEdges();
+      expect(edges).toHaveLength(2);
+      expect(edges.every(e => e.role === 'edge')).toBe(true);
+    });
+
+    it('getEdgesOf 返回关联到指定 node 的所有 edge', () => {
+      graph.add('card', {id: 'n1', x: 0, y: 0, width: 100, height: 60, title: 'A'});
+      graph.add('card', {id: 'n2', x: 200, y: 0, width: 100, height: 60, title: 'B'});
+      graph.add('card', {id: 'n3', x: 400, y: 0, width: 100, height: 60, title: 'C'});
+      graph.add('edge', {id: 'e1', source: 'n1', target: 'n2'});
+      graph.add('edge', {id: 'e2', source: 'n2', target: 'n3'});
+      graph.add('edge', {id: 'e3', source: 'n1', target: 'n3'});
+
+      // n1 关联 e1 (source) 和 e3 (source)
+      const n1Edges = graph.getEdgesOf('n1');
+      expect(n1Edges).toHaveLength(2);
+      expect(n1Edges.map(e => e.id).sort()).toEqual(['e1', 'e3']);
+
+      // n2 关联 e1 (target) 和 e2 (source)
+      const n2Edges = graph.getEdgesOf('n2');
+      expect(n2Edges).toHaveLength(2);
+      expect(n2Edges.map(e => e.id).sort()).toEqual(['e1', 'e2']);
+
+      // n3 关联 e2 (target) 和 e3 (target)
+      const n3Edges = graph.getEdgesOf('n3');
+      expect(n3Edges).toHaveLength(2);
+      expect(n3Edges.map(e => e.id).sort()).toEqual(['e2', 'e3']);
+    });
+
+    it('getEdgesOf 不存在的 node 返回空数组', () => {
+      expect(graph.getEdgesOf('nonexistent')).toEqual([]);
     });
   });
 
@@ -721,6 +818,23 @@ describe('Element 实例', () => {
       app.bus.on('graph:added', handler);
       graph.add('card', {id: 'b', x: 0, y: 0, width: 100, height: 60, title: 'B'});
       expect(handler).toHaveBeenCalledOnce();
+    });
+  });
+
+  // ========================
+  // role 属性
+  // ========================
+  describe('role 属性', () => {
+    it('node 实例的 role 为 node', () => {
+      const el = graph.add('card', {id: 'c1', x: 0, y: 0, width: 100, height: 60, title: 'A'});
+      expect(el.role).toBe('node');
+    });
+
+    it('edge 实例的 role 为 edge', () => {
+      graph.add('card', {id: 'n1', x: 0, y: 0, width: 100, height: 60, title: 'A'});
+      graph.add('card', {id: 'n2', x: 200, y: 0, width: 100, height: 60, title: 'B'});
+      const el = graph.add('edge', {id: 'e1', source: 'n1', target: 'n2'});
+      expect(el.role).toBe('edge');
     });
   });
 });
