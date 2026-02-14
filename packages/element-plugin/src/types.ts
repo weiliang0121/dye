@@ -35,13 +35,15 @@ export type ElementData<T = Record<string, unknown>> = ElementBase & T;
 // Element Options (add 时的元数据)
 // ========================
 
-/** graph.add() 的选项 — 控制元素的挂载层和依赖关系 */
+/** graph.add() 的选项 — 控制元素的挂载分组和依赖关系 */
 export interface ElementOptions {
   /**
-   * 挂载到哪个图层。
-   * - 'nodes' → graph:nodes 层（zIndex 1，在上方）
-   * - 'edges' → graph:edges 层（zIndex 0，在下方）
+   * 挂载到哪个分组（控制 z 排序）。
+   * - 'nodes' → nodesGroup（后绘制，在上方）
+   * - 'edges' → edgesGroup（先绘制，在下方）
    * - 不指定 → 默认 'nodes'
+   *
+   * 注：分组使用 Group 而非独立 Canvas 层，零额外内存开销。
    */
   layer?: 'nodes' | 'edges';
 

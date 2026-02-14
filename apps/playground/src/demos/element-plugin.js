@@ -288,5 +288,5 @@ console.log('Graph Plugin — createElement + graphPlugin demo');
 console.log('Elements:', graph.getIds());
 console.log('Nodes:', graph.getAll().filter(e => e.layer === 'nodes').length);
 console.log('Edges:', graph.getAll().filter(e => e.layer === 'edges').length);
-console.log('Layers: graph:nodes (zIndex 1), graph:edges (zIndex 0)');
-console.log('Features: rendx-curve bumpX, layer separation, dependency auto-invalidation');
+console.log('Rendering: Group-based z-ordering (zero extra Canvas overhead)');
+console.log('Features: rendx-curve bumpX, dependency auto-invalidation');

@@ -4,10 +4,19 @@
  * 职责：
  * 1. 注册 Element 类型（register）
  * 2. 实例化 Element 并自动挂载到 scene（add）
- * 3. 分层渲染：nodes 层 (zIndex 1) + edges 层 (zIndex 0)
+ * 3. Group 分组排序：edges 子组在 nodes 子组下方（零额外 Canvas 开销）
  * 4. 依赖追踪：deps 声明，node 更新自动触发 edge 重绘
  * 5. 通过 bus + state 通知其他插件
  * 6. app.dispose() 时自动清理
+ *
+ * 渲染分层策略：
+ * 不创建额外的 Canvas 层（Layer），而是在 default 层内使用两个 Group 实现 z 排序：
+ * ```
+ * default Layer (唯一 Canvas)
+ * ├── edgesGroup  ← 先遍历 → 先绘制 → 在下方
+ * └── nodesGroup  ← 后遍历 → 后绘制 → 在上方
+ * ```
+ * 这避免了每个 Layer 创建独立 Renderer/Canvas 带来的内存开销。
  *
  * @example
  * ```ts
@@ -28,17 +37,13 @@
 
 import {ElementImpl} from './element';
 
+import {Group} from 'rendx-engine';
+
 import type {App, Plugin} from 'rendx-engine';
 import type {Element, ElementData, ElementDef, ElementOptions, GraphQuery} from './types';
 
 export class GraphPlugin implements Plugin, GraphQuery {
   name = 'graph';
-
-  /** 声明两个渲染层 — edges 在下方，nodes 在上方（zIndex 为排序 hint，实际由 App 分配） */
-  layers = [
-    {name: 'graph:edges', zIndex: 0},
-    {name: 'graph:nodes', zIndex: 1},
-  ];
 
   state = [
     {
@@ -49,6 +54,10 @@ export class GraphPlugin implements Plugin, GraphQuery {
   ];
 
   #app: App | null = null;
+
+  /** 逻辑分组 — edges 先添加到 scene，自然在 nodes 下方 */
+  #edgesGroup = new Group();
+  #nodesGroup = new Group();
 
   #defs = new Map<string, ElementDef<Record<string, unknown>>>();
 
@@ -61,8 +70,24 @@ export class GraphPlugin implements Plugin, GraphQuery {
   #batching = false;
   #batchDirty = false;
 
+  /** edges 子组的引用（只读，供测试/调试用） */
+  get edgesGroup(): Group {
+    return this.#edgesGroup;
+  }
+
+  /** nodes 子组的引用（只读，供测试/调试用） */
+  get nodesGroup(): Group {
+    return this.#nodesGroup;
+  }
+
   install(app: App): void {
     this.#app = app;
+
+    // 按顺序挂载到 default 层：edges 先 → 先遍历/先绘制 → 在下方
+    this.#edgesGroup.name = 'graph:edges';
+    this.#nodesGroup.name = 'graph:nodes';
+    app.scene.add(this.#edgesGroup);
+    app.scene.add(this.#nodesGroup);
   }
 
   // ========================
@@ -118,14 +143,9 @@ export class GraphPlugin implements Plugin, GraphQuery {
       this.#invalidateDependents(updatedId);
     });
 
-    // 挂载到对应层
-    const targetLayer = this.#app.getLayer(layer === 'edges' ? 'graph:edges' : 'graph:nodes');
-    if (targetLayer) {
-      targetLayer.add(el.group);
-    } else {
-      // 回退到默认 scene
-      this.#app.scene.add(el.group);
-    }
+    // 挂载到对应分组
+    const targetGroup = layer === 'edges' ? this.#edgesGroup : this.#nodesGroup;
+    targetGroup.add(el.group);
     el._setMounted(true);
 
     // 建立依赖反向索引
@@ -260,6 +280,11 @@ export class GraphPlugin implements Plugin, GraphQuery {
     this.#elements.clear();
     this.#defs.clear();
     this.#dependents.clear();
+
+    // 从 scene 移除分组
+    if (this.#edgesGroup.parent) this.#edgesGroup.parent.remove(this.#edgesGroup);
+    if (this.#nodesGroup.parent) this.#nodesGroup.parent.remove(this.#nodesGroup);
+
     this.#app = null;
   }
 

@@ -526,32 +526,41 @@ describe('Element 实例', () => {
       expect(el.layer).toBe('nodes');
     });
 
-    it('layer: edges 挂载到 graph:edges 层', () => {
+    it('layer: edges 挂载到 edgesGroup', () => {
       const Stub = createElement(() => {});
       graph.register('edge', Stub);
 
       const el = graph.add('edge', {id: 'e1', x: 0, y: 0}, {layer: 'edges'});
       expect(el.layer).toBe('edges');
 
-      // group 应挂载到 graph:edges 层
-      const edgeLayer = app.getLayer('graph:edges');
-      expect(edgeLayer).toBeDefined();
-      expect(edgeLayer!.children).toContain(el.group);
+      // group 应挂载到 edgesGroup 内
+      expect(graph.edgesGroup.children).toContain(el.group);
     });
 
-    it('nodes layer 和 edges layer 是独立的', () => {
+    it('nodes 和 edges 分组是独立的', () => {
       const Stub = createElement(() => {});
       graph.register('edge', Stub);
 
-      graph.add('card', {id: 'n1', x: 0, y: 0, width: 100, height: 60, title: 'A'});
-      graph.add('edge', {id: 'e1', x: 0, y: 0}, {layer: 'edges'});
+      const n = graph.add('card', {id: 'n1', x: 0, y: 0, width: 100, height: 60, title: 'A'});
+      const e = graph.add('edge', {id: 'e1', x: 0, y: 0}, {layer: 'edges'});
 
-      const nodesLayer = app.getLayer('graph:nodes');
-      const edgesLayer = app.getLayer('graph:edges');
+      // 各自在不同分组
+      expect(graph.nodesGroup.children).toContain(n.group);
+      expect(graph.edgesGroup.children).toContain(e.group);
+      expect(graph.nodesGroup.children).not.toContain(e.group);
+      expect(graph.edgesGroup.children).not.toContain(n.group);
+    });
 
-      expect(nodesLayer).toBeDefined();
-      expect(edgesLayer).toBeDefined();
-      expect(nodesLayer).not.toBe(edgesLayer);
+    it('不创建额外的 Canvas 层', () => {
+      // graph 插件不应该声明自己的 layers
+      expect(app.getLayer('graph:edges')).toBeUndefined();
+      expect(app.getLayer('graph:nodes')).toBeUndefined();
+
+      // 分组都挂载在 default 层下
+      const defaultLayer = app.getLayer('default')!;
+      expect(defaultLayer).toBeDefined();
+      expect(defaultLayer.children).toContain(graph.edgesGroup);
+      expect(defaultLayer.children).toContain(graph.nodesGroup);
     });
   });
 
