@@ -58,13 +58,6 @@ export class App {
   #resizeObserver: ResizeObserver | null = null;
   #plugins: Plugin[] = [];
 
-  /**
-   * 层级自增计数器。
-   * default=0, 插件层从 1 开始自增, __event__=99999。
-   * 确保每个层拿到唯一的 CSS z-index，不会互相冲突。
-   */
-  #nextLayerIndex = 1;
-
   // ========================
   // State Management
   // ========================
@@ -186,19 +179,42 @@ export class App {
   /**
    * 获取或创建图层（get-or-create 语义）。
    * 多个插件声明同名图层时，只会创建一次。
-   * 不传 zIndex 时由 App 内部自增分配唯一层级。
+   *
+   * zIndex 语义：
+   * - 传入时代表全局层级意图（负数 = default 之下，正数 = default 之上）
+   * - 若与已有层冲突，自动向上偏移到最近可用值
+   * - 省略时自动分配（当前最高非事件层 + 1）
+   *
    * @param name - 层名称
-   * @param zIndex - 显式层级（可选，仅在首次创建时生效；省略则自增分配）
+   * @param zIndex - 全局层级意图（可选）
    */
   acquireLayer(name: string, zIndex?: number): Layer {
     const existing = this.scene.getLayer(name);
     if (existing) return existing;
-    const index = zIndex ?? this.#nextLayerIndex++;
-    // 确保计数器始终 > 已使用的最大值
-    if (index >= this.#nextLayerIndex) {
-      this.#nextLayerIndex = index + 1;
-    }
+    const index = zIndex !== undefined ? this.#resolveIndex(zIndex) : this.#nextAvailableIndex();
     return this.addLayer(name, index);
+  }
+
+  /**
+   * 解析 zIndex：若已被占用则向上偏移到最近可用值。
+   * 保证返回值不会与任何已有层的 layerIndex 冲突。
+   */
+  #resolveIndex(desired: number): number {
+    const used = new Set(this.scene.layers.map(l => l.layerIndex));
+    while (used.has(desired)) desired++;
+    return desired;
+  }
+
+  /**
+   * 自动分配：当前最高非事件层 index + 1。
+   * 保证返回值始终 >= 1（default 层固定为 0）。
+   */
+  #nextAvailableIndex(): number {
+    let max = 0;
+    for (const l of this.scene.layers) {
+      if (!l.isEventLayer && l.layerIndex > max) max = l.layerIndex;
+    }
+    return max + 1;
   }
 
   /**
@@ -228,11 +244,11 @@ export class App {
       }
     }
 
-    // 自动创建/复用图层（按声明的 zIndex hint 排序后分配，保证相对顺序）
+    // 自动创建/复用图层（按 zIndex 排序后依次创建，传透 zIndex 保留全局层级意图）
     if (plugin.layers) {
       const sorted = [...plugin.layers].sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0));
       for (const decl of sorted) {
-        this.acquireLayer(decl.name);
+        this.acquireLayer(decl.name, decl.zIndex);
       }
     }
 

@@ -21,10 +21,12 @@ export interface PluginLayerDeclaration {
   /** 层名称 */
   name: string;
   /**
-   * 排序 hint（可选）。
-   * - 同一插件内多个层按此值排序，值小的在下方
-   * - 实际 CSS z-index 由 App 自增分配，不会与其他插件冲突
-   * - 省略时按声明顺序递增
+   * 全局层级意图（可选）。
+   *
+   * - 负数：在 default 层（index=0）之下（如 grid 背景层）
+   * - 正数：在 default 层之上（如节点层、选区层）
+   * - 同值冲突时 App 自动向上偏移，保证唯一
+   * - 省略时自动分配（当前最高层 + 1）
    */
   zIndex?: number;
 }

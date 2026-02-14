@@ -488,7 +488,7 @@ describe('Plugin System - 插件系统', () => {
       app.dispose();
     });
 
-    it('自增计数器不与显式 zIndex 冲突', () => {
+    it('显式 zIndex 后自动分配不冲突', () => {
       const app = new App({width: 100, height: 100});
       app.mount(container);
 
@@ -496,13 +496,37 @@ describe('Plugin System - 插件系统', () => {
       const explicitLayer = app.acquireLayer('explicit', 50);
       expect(explicitLayer.layerIndex).toBe(50);
 
-      // 之后自增应跳过 50（从 51 开始）
+      // 之后自动分配应跳过 50（从 51 开始）
       const autoLayer = app.acquireLayer('auto');
       expect(autoLayer.layerIndex).toBeGreaterThan(50);
       app.dispose();
     });
 
-    it('插件声明的多个层自动分配且保持相对顺序', () => {
+    it('声明的 zIndex 与已有层冲突时自动偏移', () => {
+      const app = new App({width: 100, height: 100});
+      app.mount(container);
+
+      // default 层已占用 index 0
+      const layer = app.acquireLayer('edges', 0);
+      // 应被偏移到 1（而不是和 default 冲突）
+      expect(layer.layerIndex).toBe(1);
+      expect(layer.layerName).toBe('edges');
+      app.dispose();
+    });
+
+    it('负数 zIndex 放在 default 层之下', () => {
+      const app = new App({width: 100, height: 100});
+      app.mount(container);
+
+      const gridLayer = app.acquireLayer('grid', -1);
+      expect(gridLayer.layerIndex).toBe(-1);
+      // 确认在 default(0) 之下
+      const defaultLayer = app.getLayer('default')!;
+      expect(gridLayer.layerIndex).toBeLessThan(defaultLayer.layerIndex);
+      app.dispose();
+    });
+
+    it('插件声明的多个层保持相对顺序（含冲突解决）', () => {
       const app = new App({width: 100, height: 100});
       app.mount(container);
 
