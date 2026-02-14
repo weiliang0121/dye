@@ -1,8 +1,24 @@
 {
   "name": "@dye/gradient",
   "version": "0.0.0",
-  "author": "wei.liang",
+  "description": "Gradient parsing and generation",
+  "license": "MIT",
+  "author": "wei.liang (https://github.com/weiliang0121)",
   "type": "module",
+  "keywords": [
+    "dye",
+    "2d",
+    "canvas",
+    "rendering",
+    "visualization",
+    "scene-graph"
+  ],
+  "homepage": "https://weiliang0121.github.io/dye/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/weiliang0121/dye.git",
+    "directory": "packages/gradient"
+  },
   "main": "dist/main.cjs",
   "module": "dist/main.js",
   "types": "dist/main.d.ts",
