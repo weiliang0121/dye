@@ -1,5 +1,5 @@
 {
-  "name": "@dye/path",
+  "name": "dye-path",
   "version": "0.0.1",
   "description": "SVG path builder and parser",
   "license": "MIT",
@@ -36,8 +36,5 @@
   "sideEffects": false,
   "files": [
     "dist"
-  ],
-  "publishConfig": {
-    "access": "public"
-  }
+  ]
 }

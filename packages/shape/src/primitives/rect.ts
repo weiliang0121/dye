@@ -1,5 +1,5 @@
-import type {Path} from '@dye/path';
-import {isNum, isUndef} from '@dye/core';
+import type {Path} from 'dye-path';
+import {isNum, isUndef} from 'dye-core';
 
 /** 矩形配置 */
 export interface RectOptions {

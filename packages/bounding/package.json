@@ -1,5 +1,5 @@
 {
-  "name": "@dye/bounding",
+  "name": "dye-bounding",
   "version": "0.0.1",
   "description": "Bounding box computation utilities",
   "license": "MIT",
@@ -36,8 +36,5 @@
   "sideEffects": false,
   "files": [
     "dist"
-  ],
-  "publishConfig": {
-    "access": "public"
-  }
+  ]
 }

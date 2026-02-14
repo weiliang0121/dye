@@ -126,7 +126,7 @@ async function runCode() {
 
   try {
     // Dynamic import the engine so user code can reference it
-    const engine = await import('@dye/engine');
+    const engine = await import('dye-engine');
 
     // Create a module blob with the user's code
     // Replace import statements to inject the engine module

@@ -1,4 +1,4 @@
-import {BoundingBox} from '@dye/bounding';
+import {BoundingBox} from 'dye-bounding';
 import type {FontMap} from './type';
 import {FontOptions} from './font';
 import {PingFangSC} from './fonts/pingfangsc';

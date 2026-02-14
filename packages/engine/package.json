@@ -1,5 +1,5 @@
 {
-  "name": "@dye/engine",
+  "name": "dye-engine",
   "version": "0.1.0",
   "description": "2D scene graph engine with animation, events, and plugin system",
   "license": "MIT",
@@ -37,22 +37,19 @@
     "test:coverage": "vitest run --coverage --config ../../vitest.config.ts"
   },
   "dependencies": {
-    "@dye/bounding": "workspace:^",
-    "@dye/canvas": "workspace:^",
-    "@dye/ease": "workspace:^",
-    "@dye/interpolate": "workspace:^",
-    "@dye/path": "workspace:^",
-    "@dye/shape": "workspace:^",
-    "@dye/svg": "workspace:^",
-    "@dye/core": "workspace:^",
+    "dye-bounding": "workspace:^",
+    "dye-canvas": "workspace:^",
+    "dye-ease": "workspace:^",
+    "dye-interpolate": "workspace:^",
+    "dye-path": "workspace:^",
+    "dye-shape": "workspace:^",
+    "dye-svg": "workspace:^",
+    "dye-core": "workspace:^",
     "eventemitter3": "^5.0.4",
     "gl-matrix": "^3.4.4"
   },
   "sideEffects": false,
   "files": [
     "dist"
-  ],
-  "publishConfig": {
-    "access": "public"
-  }
+  ]
 }

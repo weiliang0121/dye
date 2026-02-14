@@ -4,7 +4,7 @@ import {EventObserver} from './events';
 import {serialize, deserialize} from './serialization';
 import {imageLoader} from './core/image-loader';
 
-import type {Mat2d} from '@dye/core';
+import type {Mat2d} from 'dye-core';
 import type {RendererConfig} from './renderers/renderer';
 import type {DyeJSON} from './serialization';
 import type {Plugin} from './plugin';

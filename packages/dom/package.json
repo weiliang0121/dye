@@ -1,5 +1,5 @@
 {
-  "name": "@dye/dom",
+  "name": "dye-dom",
   "version": "0.0.1",
   "description": "DOM and SVG element manipulation utilities",
   "license": "MIT",
@@ -34,14 +34,11 @@
     "dev": "tsup --watch"
   },
   "dependencies": {
-    "@dye/bounding": "workspace:^",
-    "@dye/core": "workspace:^"
+    "dye-bounding": "workspace:^",
+    "dye-core": "workspace:^"
   },
   "sideEffects": false,
   "files": [
     "dist"
-  ],
-  "publishConfig": {
-    "access": "public"
-  }
+  ]
 }

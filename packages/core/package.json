@@ -1,5 +1,5 @@
 {
-  "name": "@dye/core",
+  "name": "dye-core",
   "version": "0.0.1",
   "description": "Core types and utility functions for Dye rendering engine",
   "license": "MIT",
@@ -36,8 +36,5 @@
   "sideEffects": false,
   "files": [
     "dist"
-  ],
-  "publishConfig": {
-    "access": "public"
-  }
+  ]
 }

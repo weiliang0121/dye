@@ -1,5 +1,5 @@
 {
-  "name": "@dye/shape",
+  "name": "dye-shape",
   "version": "0.0.1",
   "description": "Shape generators (circle, rect, arc, sector, area, polygon, symbol)",
   "license": "MIT",
@@ -34,15 +34,12 @@
     "dev": "tsup --watch"
   },
   "dependencies": {
-    "@dye/curve": "workspace:^",
-    "@dye/path": "workspace:^",
-    "@dye/core": "workspace:^"
+    "dye-curve": "workspace:^",
+    "dye-path": "workspace:^",
+    "dye-core": "workspace:^"
   },
   "sideEffects": false,
   "files": [
     "dist"
-  ],
-  "publishConfig": {
-    "access": "public"
-  }
+  ]
 }

@@ -1,8 +1,8 @@
-import {BoundingBox} from '@dye/bounding';
+import {BoundingBox} from 'dye-bounding';
 
 import {Shape} from '../core';
 
-import {Point} from '@dye/core';
+import {Point} from 'dye-core';
 
 /** 圆形形状，用于 Scene Graph 中的圆形节点 */
 export class CircleShape extends Shape {

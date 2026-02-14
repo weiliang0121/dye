@@ -5,7 +5,7 @@
 ## 构造
 
 ```typescript
-import { App } from '@dye/engine';
+import { App } from 'dye-engine';
 
 const app = new App({
   width: 800,

@@ -83,6 +83,6 @@ node.attrs.useClipBoxTransform()
 
 ## 缓动函数
 
-33 种内置缓动函数，来自 `@dye/ease`：
+33 种内置缓动函数，来自 `dye-ease`：
 
 `linear`, `quadIn/Out/InOut`, `cubicIn/Out/InOut`, `quartIn/Out/InOut`, `quintIn/Out/InOut`, `sineIn/Out/InOut`, `expIn/Out/InOut`, `circIn/Out/InOut`, `backIn/Out/InOut`, `elasticIn/Out/InOut`, `bounceIn/Out/InOut`

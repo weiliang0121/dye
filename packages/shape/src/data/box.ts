@@ -1,4 +1,4 @@
-import type {Path} from '@dye/path';
+import type {Path} from 'dye-path';
 
 export interface BoxXOptions {
   cx: number;

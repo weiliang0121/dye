@@ -1,6 +1,6 @@
-import {BoundingBox} from '@dye/bounding';
-import {createSymbol} from '@dye/shape';
-import {Path} from '@dye/path';
+import {BoundingBox} from 'dye-bounding';
+import {createSymbol} from 'dye-shape';
+import {Path} from 'dye-path';
 
 import {Shape} from '../core';
 

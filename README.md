@@ -29,11 +29,11 @@
 ## 快速开始
 
 ```bash
-npm install @dye/engine
+npm install dye-engine
 ```
 
 ```typescript
-import { App, Node } from '@dye/engine';
+import { App, Node } from 'dye-engine';
 
 const app = new App({ width: 800, height: 600 });
 app.mount(document.getElementById('container')!);
@@ -53,31 +53,31 @@ app.render();
 
 ```
 Layer 0 (零依赖)
-├── @dye/core         基础类型 + 工具函数
-├── @dye/bounding     包围盒计算
-├── @dye/path         SVG 路径构建器
-└── @dye/ease         缓动函数
+├── dye-core         基础类型 + 工具函数
+├── dye-bounding     包围盒计算
+├── dye-path         SVG 路径构建器
+└── dye-ease         缓动函数
 
 Layer 1
-├── @dye/dom          DOM/SVG 元素操作
-└── @dye/curve        曲线插值算法
+├── dye-dom          DOM/SVG 元素操作
+└── dye-curve        曲线插值算法
 
 Layer 2
-├── @dye/interpolate  插值器（数值、颜色、向量、矩阵）
-├── @dye/shape        形状生成器
-└── @dye/gradient     渐变解析与生成
+├── dye-interpolate  插值器（数值、颜色、向量、矩阵）
+├── dye-shape        形状生成器
+└── dye-gradient     渐变解析与生成
 
 Layer 3
-├── @dye/canvas       Canvas2D 渲染器
-└── @dye/svg          SVG 渲染器
+├── dye-canvas       Canvas2D 渲染器
+└── dye-svg          SVG 渲染器
 
 Layer 4
-└── @dye/engine       场景图引擎
+└── dye-engine       场景图引擎
 
 插件
-├── @dye/grid-plugin     网格插件
-├── @dye/history-plugin  历史记录插件
-└── @dye/minimap-plugin  小地图插件
+├── dye-grid-plugin     网格插件
+├── dye-history-plugin  历史记录插件
+└── dye-minimap-plugin  小地图插件
 ```
 
 ## 文档

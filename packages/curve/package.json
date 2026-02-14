@@ -1,5 +1,5 @@
 {
-  "name": "@dye/curve",
+  "name": "dye-curve",
   "version": "0.0.1",
   "description": "Curve interpolation algorithms (linear, natural, bump, monotone, step)",
   "license": "MIT",
@@ -34,13 +34,10 @@
     "dev": "tsup --watch"
   },
   "dependencies": {
-    "@dye/path": "workspace:^"
+    "dye-path": "workspace:^"
   },
   "sideEffects": false,
   "files": [
     "dist"
-  ],
-  "publishConfig": {
-    "access": "public"
-  }
+  ]
 }

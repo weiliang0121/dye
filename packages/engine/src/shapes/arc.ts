@@ -1,12 +1,12 @@
-import {BoundingBox} from '@dye/bounding';
-import {createShape} from '@dye/shape';
-import {extent} from '@dye/core';
-import {Path} from '@dye/path';
+import {BoundingBox} from 'dye-bounding';
+import {createShape} from 'dye-shape';
+import {extent} from 'dye-core';
+import {Path} from 'dye-path';
 
 import {Shape} from '../core';
 import {ArcTransform} from '../transforms';
 
-import type {Point} from '@dye/core';
+import type {Point} from 'dye-core';
 
 export class ArcShape extends Shape {
   command = 'path' as const;

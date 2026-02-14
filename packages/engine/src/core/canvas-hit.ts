@@ -1,6 +1,6 @@
-import {isEmpty, isNone, isNum, isStr} from '@dye/core';
+import {isEmpty, isNone, isNum, isStr} from 'dye-core';
 
-import type {AO, Point} from '@dye/core';
+import type {AO, Point} from 'dye-core';
 
 const isEmptyOrNone = (v: unknown) => isEmpty(v) || isNone(v);
 

@@ -1,9 +1,9 @@
-import {BoundingBox} from '@dye/bounding';
+import {BoundingBox} from 'dye-bounding';
 
 import {Shape} from '../core';
 import {imageLoader} from '../core/image-loader';
 
-import type {Point} from '@dye/core';
+import type {Point} from 'dye-core';
 
 type ImageSource = HTMLImageElement | ImageBitmap;
 

@@ -1,5 +1,5 @@
 {
-  "name": "@dye/canvas",
+  "name": "dye-canvas",
   "version": "0.0.1",
   "description": "Canvas2D renderer implementation for Dye",
   "license": "MIT",
@@ -34,19 +34,16 @@
     "dev": "tsup --watch"
   },
   "dependencies": {
-    "@dye/gradient": "workspace:^",
-    "@dye/dom": "workspace:^",
-    "@dye/core": "workspace:^"
+    "dye-gradient": "workspace:^",
+    "dye-dom": "workspace:^",
+    "dye-core": "workspace:^"
   },
   "devDependencies": {
-    "@dye/shape": "workspace:^",
-    "@dye/path": "workspace:^"
+    "dye-shape": "workspace:^",
+    "dye-path": "workspace:^"
   },
   "sideEffects": false,
   "files": [
     "dist"
-  ],
-  "publishConfig": {
-    "access": "public"
-  }
+  ]
 }

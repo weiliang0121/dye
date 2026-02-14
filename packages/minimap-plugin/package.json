@@ -1,5 +1,5 @@
 {
-  "name": "@dye/minimap-plugin",
+  "name": "dye-minimap-plugin",
   "version": "0.0.1",
   "description": "Minimap navigation plugin for Dye engine",
   "license": "MIT",
@@ -34,13 +34,10 @@
     "dev": "tsup --watch"
   },
   "dependencies": {
-    "@dye/engine": "workspace:^"
+    "dye-engine": "workspace:^"
   },
   "sideEffects": false,
   "files": [
     "dist"
-  ],
-  "publishConfig": {
-    "access": "public"
-  }
+  ]
 }

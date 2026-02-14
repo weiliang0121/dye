@@ -1,5 +1,5 @@
 {
-  "name": "@dye/ease",
+  "name": "dye-ease",
   "version": "0.0.1",
   "description": "Easing functions collection (33 built-in)",
   "license": "MIT",
@@ -36,8 +36,5 @@
   "sideEffects": false,
   "files": [
     "dist"
-  ],
-  "publishConfig": {
-    "access": "public"
-  }
+  ]
 }

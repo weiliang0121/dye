@@ -1,4 +1,4 @@
-# @dye/engine
+# dye-engine
 
 ## 概述
 
@@ -6,7 +6,7 @@
 
 ## 依赖
 
-`@dye/bounding`, `@dye/canvas`, `@dye/ease`, `@dye/interpolate`, `@dye/path`, `@dye/shape`, `@dye/svg`, `@dye/core` + `gl-matrix` + `eventemitter3`
+`dye-bounding`, `dye-canvas`, `dye-ease`, `dye-interpolate`, `dye-path`, `dye-shape`, `dye-svg`, `dye-core` + `gl-matrix` + `eventemitter3`
 
 ## 架构概览
 
@@ -172,7 +172,7 @@ export * from './plugin';        // Plugin 接口
 | RectShape | `'rect'` | `(x, y, width, height)` | `rect` |
 | LineShape | `'line'` | `(x1, y1, x2, y2)` | `line` |
 | ImageShape | `'image'` | `(src, x, y, width, height)` | `image` |
-| PathShape | `'path'` | 自由路径（@dye/shape 生成） | `path` |
+| PathShape | `'path'` | 自由路径（dye-shape 生成） | `path` |
 | CurveShape | `'path'` | 曲线路径 | `curve` |
 | AreaShape | `'path'` | 面积路径 | `area` |
 | PolygonShape | `'path'` | 多边形 | `polygon` |

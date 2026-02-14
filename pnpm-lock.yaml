@@ -65,7 +65,7 @@ importers:
 
   apps/playground:
     dependencies:
-      '@dye/engine':
+      dye-engine:
         specifier: workspace:^
         version: link:../../packages/engine
     devDependencies:
@@ -83,20 +83,20 @@ importers:
 
   packages/canvas:
     dependencies:
-      '@dye/core':
+      dye-core:
         specifier: workspace:^
         version: link:../core
-      '@dye/dom':
+      dye-dom:
         specifier: workspace:^
         version: link:../dom
-      '@dye/gradient':
+      dye-gradient:
         specifier: workspace:^
         version: link:../gradient
     devDependencies:
-      '@dye/path':
+      dye-path:
         specifier: workspace:^
         version: link:../path
-      '@dye/shape':
+      dye-shape:
         specifier: workspace:^
         version: link:../shape
 
@@ -104,16 +104,16 @@ importers:
 
   packages/curve:
     dependencies:
-      '@dye/path':
+      dye-path:
         specifier: workspace:^
         version: link:../path
 
   packages/dom:
     dependencies:
-      '@dye/bounding':
+      dye-bounding:
         specifier: workspace:^
         version: link:../bounding
-      '@dye/core':
+      dye-core:
         specifier: workspace:^
         version: link:../core
 
@@ -121,28 +121,28 @@ importers:
 
   packages/engine:
     dependencies:
-      '@dye/bounding':
+      dye-bounding:
         specifier: workspace:^
         version: link:../bounding
-      '@dye/canvas':
+      dye-canvas:
         specifier: workspace:^
         version: link:../canvas
-      '@dye/core':
+      dye-core:
         specifier: workspace:^
         version: link:../core
-      '@dye/ease':
+      dye-ease:
         specifier: workspace:^
         version: link:../ease
-      '@dye/interpolate':
+      dye-interpolate:
         specifier: workspace:^
         version: link:../interpolate
-      '@dye/path':
+      dye-path:
         specifier: workspace:^
         version: link:../path
-      '@dye/shape':
+      dye-shape:
         specifier: workspace:^
         version: link:../shape
-      '@dye/svg':
+      dye-svg:
         specifier: workspace:^
         version: link:../svg
       eventemitter3:
@@ -154,28 +154,28 @@ importers:
 
   packages/gradient:
     dependencies:
-      '@dye/core':
+      dye-core:
         specifier: workspace:^
         version: link:../core
-      '@dye/dom':
+      dye-dom:
         specifier: workspace:^
         version: link:../dom
 
   packages/grid-plugin:
     dependencies:
-      '@dye/engine':
+      dye-engine:
         specifier: workspace:^
         version: link:../engine
 
   packages/history-plugin:
     dependencies:
-      '@dye/engine':
+      dye-engine:
         specifier: workspace:^
         version: link:../engine
 
   packages/interpolate:
     dependencies:
-      '@dye/core':
+      dye-core:
         specifier: workspace:^
         version: link:../core
       gl-matrix:
@@ -184,7 +184,7 @@ importers:
 
   packages/minimap-plugin:
     dependencies:
-      '@dye/engine':
+      dye-engine:
         specifier: workspace:^
         version: link:../engine
 
@@ -192,32 +192,32 @@ importers:
 
   packages/shape:
     dependencies:
-      '@dye/core':
+      dye-core:
         specifier: workspace:^
         version: link:../core
-      '@dye/curve':
+      dye-curve:
         specifier: workspace:^
         version: link:../curve
-      '@dye/path':
+      dye-path:
         specifier: workspace:^
         version: link:../path
 
   packages/svg:
     dependencies:
-      '@dye/core':
+      dye-core:
         specifier: workspace:^
         version: link:../core
-      '@dye/dom':
+      dye-dom:
         specifier: workspace:^
         version: link:../dom
-      '@dye/gradient':
+      dye-gradient:
         specifier: workspace:^
         version: link:../gradient
     devDependencies:
-      '@dye/path':
+      dye-path:
         specifier: workspace:^
         version: link:../path
-      '@dye/shape':
+      dye-shape:
         specifier: workspace:^
         version: link:../shape
 

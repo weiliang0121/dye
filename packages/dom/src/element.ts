@@ -1,4 +1,4 @@
-import type {AO, Size} from '@dye/core';
+import type {AO, Size} from 'dye-core';
 
 /**
  * 设置元素属性

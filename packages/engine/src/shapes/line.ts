@@ -1,4 +1,4 @@
-import {BoundingBox} from '@dye/bounding';
+import {BoundingBox} from 'dye-bounding';
 
 import {Shape} from '../core';
 

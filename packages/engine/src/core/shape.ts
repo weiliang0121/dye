@@ -1,8 +1,8 @@
-import {BoundingBox} from '@dye/bounding';
-import {uid8} from '@dye/core';
+import {BoundingBox} from 'dye-bounding';
+import {uid8} from 'dye-core';
 
-import type {AO, Point} from '@dye/core';
-import type {Path} from '@dye/path';
+import type {AO, Point} from 'dye-core';
+import type {Path} from 'dye-path';
 
 export type ShapeCommand = 'text' | 'circle' | 'rect' | 'line' | 'path' | 'image' | '';
 

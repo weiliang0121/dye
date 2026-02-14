@@ -1,5 +1,5 @@
 {
-  "name": "@dye/interpolate",
+  "name": "dye-interpolate",
   "version": "0.0.1",
   "description": "Interpolators for numbers, colors, vectors, and matrices",
   "license": "MIT",
@@ -35,13 +35,10 @@
   },
   "dependencies": {
     "gl-matrix": "^3.4.4",
-    "@dye/core": "workspace:^"
+    "dye-core": "workspace:^"
   },
   "sideEffects": false,
   "files": [
     "dist"
-  ],
-  "publishConfig": {
-    "access": "public"
-  }
+  ]
 }

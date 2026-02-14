@@ -8,7 +8,7 @@ Playground 是一个独立的交互式编辑器应用，用于在线体验 Dye �
 
 ```bash
 # 在仓库根目录
-pnpm --filter @dye/playground dev
+pnpm --filter dye-playground dev
 ```
 
 启动后访问 `http://localhost:5174`。

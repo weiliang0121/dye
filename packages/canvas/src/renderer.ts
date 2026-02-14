@@ -1,8 +1,8 @@
-import {setAttrs, setStyles, createCanvasEl} from '@dye/dom';
+import {setAttrs, setStyles, createCanvasEl} from 'dye-dom';
 
 import {fillAndStrokeTarget, clip} from './attributes';
 
-import type {IGraphicsRenderer, ClipPath, GradientOptions, AO, GF, Size} from '@dye/core';
+import type {IGraphicsRenderer, ClipPath, GradientOptions, AO, GF, Size} from 'dye-core';
 
 import type {Gradients, ClipPaths} from './attributes';
 

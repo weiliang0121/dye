@@ -1,5 +1,5 @@
 {
-  "name": "@dye/gradient",
+  "name": "dye-gradient",
   "version": "0.0.1",
   "description": "Gradient parsing and generation",
   "license": "MIT",
@@ -34,14 +34,11 @@
     "dev": "tsup --watch"
   },
   "dependencies": {
-    "@dye/dom": "workspace:^",
-    "@dye/core": "workspace:^"
+    "dye-dom": "workspace:^",
+    "dye-core": "workspace:^"
   },
   "sideEffects": false,
   "files": [
     "dist"
-  ],
-  "publishConfig": {
-    "access": "public"
-  }
+  ]
 }

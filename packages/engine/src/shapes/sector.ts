@@ -1,11 +1,11 @@
-import {BoundingBox} from '@dye/bounding';
-import {createShape} from '@dye/shape';
-import {Path} from '@dye/path';
+import {BoundingBox} from 'dye-bounding';
+import {createShape} from 'dye-shape';
+import {Path} from 'dye-path';
 
 import {Shape} from '../core';
 import {SectorTransform} from '../transforms';
 
-import type {Point} from '@dye/core';
+import type {Point} from 'dye-core';
 
 export class SectorShape extends Shape {
   command = 'path' as const;

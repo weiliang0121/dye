@@ -1,11 +1,11 @@
-# @dye/canvas
+# dye-canvas
 
 Canvas2D 渲染器实现，实现 `IGraphicsRenderer` 接口。
 
 ## CanvasRenderer
 
 ```typescript
-import { CanvasRenderer } from '@dye/canvas';
+import { CanvasRenderer } from 'dye-canvas';
 
 const renderer = new CanvasRenderer({ width: 800, height: 600 });
 document.body.appendChild(renderer.el);

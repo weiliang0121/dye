@@ -1,8 +1,8 @@
-import {BoundingBox} from '@dye/bounding';
+import {BoundingBox} from 'dye-bounding';
 
 import {Shape} from '../core';
 
-import type {Point} from '@dye/core';
+import type {Point} from 'dye-core';
 
 /** 矩形形状 */
 export class RectShape extends Shape {
