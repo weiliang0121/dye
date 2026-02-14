@@ -2,7 +2,7 @@ import {defineConfig} from 'vite';
 import path from 'node:path';
 
 export default defineConfig({
-  base: process.env.GITHUB_PAGES ? '/dye/playground/' : '/',
+  base: process.env.GITHUB_PAGES ? '/rendx/playground/' : '/',
   resolve: {
     alias: {
       'rendx-engine': path.resolve(__dirname, '../../packages/engine/src/main.ts'),

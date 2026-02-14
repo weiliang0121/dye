@@ -4,7 +4,7 @@ export default defineConfig({
   title: 'Rendx',
   description: '轻量级 2D 可视化渲染引擎',
   lang: 'zh-CN',
-  base: '/dye/',
+  base: '/rendx/',
 
   ignoreDeadLinks: true,
 
@@ -77,7 +77,7 @@ export default defineConfig({
       ],
     },
 
-    socialLinks: [{icon: 'github', link: 'https://github.com/weiliang0121/dye'}],
+    socialLinks: [{icon: 'github', link: 'https://github.com/weiliang0121/rendx'}],
 
     outline: {level: [2, 3]},
   },

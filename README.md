@@ -9,8 +9,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/weiliang0121/dye/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
-  <a href="https://github.com/weiliang0121/dye"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome"></a>
+  <a href="https://github.com/weiliang0121/rendx/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
+  <a href="https://github.com/weiliang0121/rendx"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome"></a>
 </p>
 
 ---
@@ -82,8 +82,8 @@ Layer 4
 
 ## 文档
 
-- 📖 [在线文档](https://weiliang0121.github.io/dye/)
-- 🎮 [Playground](https://weiliang0121.github.io/dye/playground/)
+- 📖 [在线文档](https://weiliang0121.github.io/rendx/)
+- 🎮 [Playground](https://weiliang0121.github.io/rendx/playground/)
 
 ## 开发
 

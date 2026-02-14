@@ -13,10 +13,10 @@
     "visualization",
     "scene-graph"
   ],
-  "homepage": "https://weiliang0121.github.io/dye/",
+  "homepage": "https://weiliang0121.github.io/rendx/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/weiliang0121/dye.git",
+    "url": "https://github.com/weiliang0121/rendx.git",
     "directory": "packages/bounding"
   },
   "main": "dist/main.cjs",

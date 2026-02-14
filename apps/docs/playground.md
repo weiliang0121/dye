@@ -2,7 +2,7 @@
 
 Playground 是一个独立的交互式编辑器应用，用于在线体验 Rendx 引擎。
 
-**[打开在线 Playground →](https://weiliang0121.github.io/dye/playground/)**
+**[打开在线 Playground →](https://weiliang0121.github.io/rendx/playground/)**
 
 ## 本地开发
 
