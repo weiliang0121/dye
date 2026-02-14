@@ -1,0 +1,19 @@
+{
+  "name": "@dye/playground",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 5174",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@dye/engine": "workspace:^"
+  },
+  "devDependencies": {
+    "monaco-editor": "^0.52.2",
+    "vite": "^6.3.5",
+    "typescript": "^5.9.0"
+  }
+}

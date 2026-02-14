@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dye Playground</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <aside id="sidebar">
+        <div class="sidebar-header">
+          <h1>Dye</h1>
+          <span class="badge">Playground</span>
+        </div>
+        <ul id="demo-list"></ul>
+      </aside>
+      <main id="workspace">
+        <div id="editor-pane"></div>
+        <div id="divider"></div>
+        <div id="preview-pane">
+          <div id="toolbar">
+            <button id="btn-run" title="Run (Ctrl+Enter)">▶ Run</button>
+            <button id="btn-reset" title="Reset">↺ Reset</button>
+          </div>
+          <div id="canvas-container"></div>
+          <pre id="console-output"></pre>
+        </div>
+      </main>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
