@@ -1,4 +1,4 @@
-# @vis/bounding
+# @dye/core
 
 ## 0.0.1
 
@@ -9,15 +9,3 @@
   - 添加 MIT LICENSE 文件
   - 更新 README.md（完整架构图、快速上手、徽章）
   - 添加 GitHub Actions CI/CD 及 GitHub Pages 部署工作流
-
-## 0.0.3
-
-### Patch Changes
-
-- 1.更新工作流程后的一次工程更新
-
-## 0.0.2
-
-### Patch Changes
-
-- 更新package.json配置项

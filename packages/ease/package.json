@@ -1,6 +1,6 @@
 {
   "name": "@dye/ease",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Easing functions collection (33 built-in)",
   "license": "MIT",
   "author": "wei.liang (https://github.com/weiliang0121)",

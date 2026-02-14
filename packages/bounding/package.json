@@ -1,6 +1,6 @@
 {
   "name": "@dye/bounding",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Bounding box computation utilities",
   "license": "MIT",
   "author": "wei.liang (https://github.com/weiliang0121)",

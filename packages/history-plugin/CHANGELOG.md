@@ -1,4 +1,4 @@
-# @vis/curve
+# @dye/history-plugin
 
 ## 0.0.1
 
@@ -10,26 +10,5 @@
   - 更新 README.md（完整架构图、快速上手、徽章）
   - 添加 GitHub Actions CI/CD 及 GitHub Pages 部署工作流
 - Updated dependencies [03f0d74]
-  - @dye/path@0.0.1
-
-## 0.1.0
-
-### Minor Changes
-
-- 6bf0cc6: 1.新增 natural 曲线
-
-## 0.0.3
-
-### Patch Changes
-
-- 1.更新工作流程后的一次工程更新
-- Updated dependencies
-  - @vis/path@0.0.3
-
-## 0.0.2
-
-### Patch Changes
-
-- 更新package.json配置项
-- Updated dependencies
-  - @vis/path@0.0.2
+- Updated dependencies [03f0d74]
+  - @dye/engine@0.1.0

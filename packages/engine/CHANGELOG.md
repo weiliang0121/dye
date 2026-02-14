@@ -1,5 +1,32 @@
 # @vis/engine
 
+## 0.1.0
+
+### Minor Changes
+
+- 03f0d74: 发布准备：
+  - 所有包添加 license、description、repository、homepage、keywords 元数据
+  - 添加 MIT LICENSE 文件
+  - 更新 README.md（完整架构图、快速上手、徽章）
+  - 添加 GitHub Actions CI/CD 及 GitHub Pages 部署工作流
+
+### Patch Changes
+
+- 03f0d74: 修复多个引擎 bug：
+  - RoundShape 的 ry 参数现在可选，默认与 rx 相同（符合 SVG 规范）
+  - 图片加载完成后自动触发重新渲染（imageLoader.onChange）
+  - 修复 repeat 动画在重复周期后停止的问题
+  - Attributes.useTransform() 改为实际创建 AttributeTransform 实例
+- Updated dependencies [03f0d74]
+  - @dye/core@0.0.1
+  - @dye/bounding@0.0.1
+  - @dye/path@0.0.1
+  - @dye/ease@0.0.1
+  - @dye/interpolate@0.0.1
+  - @dye/shape@0.0.1
+  - @dye/canvas@0.0.1
+  - @dye/svg@0.0.1
+
 ## 1.0.17
 
 ### Patch Changes

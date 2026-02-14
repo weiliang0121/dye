@@ -1,6 +1,6 @@
 {
   "name": "@dye/canvas",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Canvas2D renderer implementation for Dye",
   "license": "MIT",
   "author": "wei.liang (https://github.com/weiliang0121)",

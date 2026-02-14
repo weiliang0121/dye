@@ -1,6 +1,6 @@
 {
   "name": "@dye/grid-plugin",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Grid overlay plugin for Dye engine",
   "license": "MIT",
   "author": "wei.liang (https://github.com/weiliang0121)",
