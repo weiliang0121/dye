@@ -238,10 +238,17 @@ describe('Graphics - 场景图核心', () => {
       expect(root.sign()).toBe(false);
     });
 
-    it('display=false 时返回 false', () => {
+    it('display=false 且 dirty=true 时返回 true（需要重绘以清除画面）', () => {
       const g = new Graphics();
       g.display = false;
       g.dirty = true;
+      expect(g.sign()).toBe(true);
+    });
+
+    it('display=false 且 dirty=false 时返回 false', () => {
+      const g = new Graphics();
+      g.display = false;
+      g.dirty = false;
       expect(g.sign()).toBe(false);
     });
   });

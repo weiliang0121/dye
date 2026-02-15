@@ -405,8 +405,9 @@ export class Graphics extends EventTarget {
 
   /** 检查是否需要重绘（自身或子树有脏标记/更新标记） */
   sign(): boolean {
+    if (this.dirty) return true;
     if (!this.display) return false;
-    if (this.dirty || this.needUpdate || this.worldMatrixNeedUpdate) return true;
+    if (this.needUpdate || this.worldMatrixNeedUpdate) return true;
     for (let i = 0; i < this.children.length; i++) if (this.children[i].sign()) return true;
     return false;
   }

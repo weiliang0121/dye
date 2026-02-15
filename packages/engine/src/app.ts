@@ -325,6 +325,7 @@ export class App {
 
     let anyDirty = false;
     for (const layer of this.scene.layers) {
+      console.log('sign', layer.layerName, layer.sign());
       if (layer.sign()) {
         layer.draw();
         anyDirty = true;
