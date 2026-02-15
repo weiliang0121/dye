@@ -93,7 +93,7 @@ describe('Graphics - 场景图核心', () => {
       root.add(c1);
       root.add(c2);
       const visited: Graphics[] = [];
-      root.traverse((g) => visited.push(g as Graphics));
+      root.traverse(g => visited.push(g as Graphics));
       expect(visited).toEqual([root, c1, c2]);
     });
 
@@ -268,6 +268,77 @@ describe('Graphics - 场景图核心', () => {
       child.autoDisplay = false;
       root.add(child);
       root.setDisplay(false);
+      expect(child.display).toBe(true);
+    });
+
+    // ── add() 时继承父级状态（模拟 DOM CSS 继承） ──
+
+    it('add() 新增子节点继承父级 pointerEvents=false', () => {
+      const parent = new Graphics();
+      parent.setPointerEvents(false);
+
+      const child = new Graphics();
+      parent.add(child);
+      expect(child.pointerEvents).toBe(false);
+    });
+
+    it('add() 新增子节点继承父级 visible=false', () => {
+      const parent = new Graphics();
+      parent.setVisible(false);
+
+      const child = new Graphics();
+      parent.add(child);
+      expect(child.visible).toBe(false);
+    });
+
+    it('add() 新增子节点继承父级 display=false', () => {
+      const parent = new Graphics();
+      parent.setDisplay(false);
+
+      const child = new Graphics();
+      parent.add(child);
+      expect(child.display).toBe(false);
+    });
+
+    it('add() 子节点显式设置 autoPointerEvents=false 不被覆盖', () => {
+      const parent = new Graphics();
+      parent.setPointerEvents(false);
+
+      const child = new Graphics();
+      child.setPointerEvents(true); // 显式设置 → autoPointerEvents=false
+      parent.add(child);
+      expect(child.pointerEvents).toBe(true); // 不受父级影响
+    });
+
+    it('add() 孙节点也自动继承', () => {
+      const root = new Graphics();
+      root.setPointerEvents(false);
+
+      const child = new Graphics();
+      const grandchild = new Graphics();
+      child.add(grandchild);
+      root.add(child);
+      expect(child.pointerEvents).toBe(false);
+      expect(grandchild.pointerEvents).toBe(false);
+    });
+
+    it('unshift() 同样继承父级状态', () => {
+      const parent = new Graphics();
+      parent.setPointerEvents(false);
+      parent.setVisible(false);
+
+      const child = new Graphics();
+      parent.unshift(child);
+      expect(child.pointerEvents).toBe(false);
+      expect(child.visible).toBe(false);
+    });
+
+    it('父级状态为默认值(true)时不影响子节点', () => {
+      const parent = new Graphics(); // 全部默认 true
+      const child = new Graphics();
+      parent.add(child);
+      expect(child.pointerEvents).toBe(true);
+      expect(child.visible).toBe(true);
       expect(child.display).toBe(true);
     });
   });

@@ -173,7 +173,7 @@ export * from './plugin'; // Plugin 接口
 | RectShape       | `'rect'`   | `(x, y, width, height)`      | `rect`       |
 | LineShape       | `'line'`   | `(x1, y1, x2, y2)`           | `line`       |
 | ImageShape      | `'image'`  | `(src, x, y, width, height)` | `image`      |
-| PathShape       | `'path'`   | 自由路径（rendx-shape 生成） | `path`       |
+| PathShape       | `'path'`   | `(d: string)` SVG 路径字符串 | `path`       |
 | CurveShape      | `'path'`   | 曲线路径                     | `curve`      |
 | AreaShape       | `'path'`   | 面积路径                     | `area`       |
 | PolygonShape    | `'path'`   | 多边形                       | `polygon`    |
@@ -267,6 +267,8 @@ DOM → SimulatedEvent 桥接。3 组原生事件（去重绑定）：
 | `render()`                    | 同步渲染一帧（仅重绘脏层）                   |
 | `requestRender()`             | rAF 异步渲染循环                             |
 | `resize(w, h)`                | 更新所有层、容器和视口矩阵                   |
+| `setCursor(cursor)`           | 设置容器鼠标光标样式（CSS cursor 值）        |
+| `resetCursor()`               | 重置鼠标光标为默认值                         |
 | `addLayer(name, index)`       | 动态添加渲染层                               |
 | `getLayer(name)`              | 获取层                                       |
 | `use(plugin)`                 | 注册插件（同名不重复）                       |
@@ -350,6 +352,7 @@ EventObserver
 | serialization.test.ts | toJSON/fromJSON 往返序列化                                        |
 | plugin.test.ts        | 插件注册/去重/dispose                                             |
 | image.test.ts         | ImageShape + imageLoader                                          |
+| path-shape.test.ts    | PathShape.box() 包围盒计算、getWorldBBox 集成                     |
 | culling.test.ts       | 视口裁剪逻辑                                                      |
 | history.test.ts       | 历史记录插件集成                                                  |
 | text-measure.test.ts  | 文本测量                                                          |

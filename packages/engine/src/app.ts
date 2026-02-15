@@ -375,6 +375,29 @@ export class App {
     }
   }
 
+  // ========================
+  // Cursor
+  // ========================
+
+  /**
+   * 设置容器的鼠标光标样式。
+   * @param cursor - CSS cursor 值（如 'pointer'、'crosshair'、'grab'）
+   */
+  setCursor(cursor: string) {
+    if (this.#container) {
+      this.#container.style.cursor = cursor;
+    }
+  }
+
+  /**
+   * 重置鼠标光标为默认值。
+   */
+  resetCursor() {
+    if (this.#container) {
+      this.#container.style.cursor = '';
+    }
+  }
+
   clear() {
     if (this.#rafId !== null) {
       cancelAnimationFrame(this.#rafId);

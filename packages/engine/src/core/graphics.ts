@@ -142,6 +142,23 @@ export class Graphics extends EventTarget {
   }
 
   /**
+   * 将父节点的可继承状态（visible / display / pointerEvents）传播给新增子节点。
+   * 模拟 DOM 中 CSS 继承属性的行为：
+   * - 父级 pointer-events: none → 子级默认继承 none，除非子级显式覆盖
+   * - 父级 visibility: hidden → 同上
+   * - 父级 display: none → 整棵子树不渲染
+   *
+   * 使用 bySelf=false 调用，尊重子节点的 autoX 标记：
+   * - autoX=true（默认）→ 接受父级值
+   * - autoX=false（子节点显式设置过）→ 保持自身值不变
+   */
+  #inheritState(child: Graphics) {
+    if (!this.visible) child.setVisible(false, false);
+    if (!this.display) child.setDisplay(false, false);
+    if (!this.pointerEvents) child.setPointerEvents(false, false);
+  }
+
+  /**
    * 添加子节点。若 child 已有 parent 会先移除。
    * @param child - 要添加的场景图节点
    */
@@ -151,6 +168,7 @@ export class Graphics extends EventTarget {
     this.children.push(child);
     if (this.#nameMap.has(child.name)) throw new Error(`The name "${child.name}" is already used.`);
     if (child.name) this.#nameMap.set(child.name, child);
+    this.#inheritState(child);
     this.setDirty(true);
     return this;
   }
@@ -160,6 +178,7 @@ export class Graphics extends EventTarget {
     child.parent = this;
     this.children.unshift(child);
     this.#removeFromNameMap(child);
+    this.#inheritState(child);
     this.setDirty(true);
     return this;
   }

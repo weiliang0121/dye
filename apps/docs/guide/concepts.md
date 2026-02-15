@@ -15,6 +15,7 @@ Scene (type=1, 场景根节点)
 ```
 
 每个节点会维护：
+
 - **localMatrix** — 本地仿射变换矩阵
 - **worldMatrix** — 世界变换矩阵（localMatrix × parentWorldMatrix）
 - **脏标记** — 三级标记控制更新粒度
@@ -24,7 +25,7 @@ Scene (type=1, 场景根节点)
 所有几何形状（circle、rect、sector、area 等）最终都通过 `Path` 类生成 SVG 路径字符串，渲染器通过 `path(d: string)` 方法统一消费路径数据。
 
 ```typescript
-import { Path } from 'rendx-path';
+import {Path} from 'rendx-path';
 
 const p = new Path();
 p.M(10, 10).L(100, 10).L(100, 100).Z();
@@ -35,11 +36,11 @@ console.log(p.toString()); // "M10,10L100,10L100,100Z"
 
 场景图通过三级脏标记控制更新粒度：
 
-| 标记 | 作用 |
-|------|------|
-| `dirty` | 结构变化（添加/移除子节点），向上传播到根 |
-| `needUpdate` | 局部矩阵变化（translate/rotate/scale） |
-| `worldMatrixNeedUpdate` | 世界矩阵需要重新计算 |
+| 标记                    | 作用                                      |
+| ----------------------- | ----------------------------------------- |
+| `dirty`                 | 结构变化（添加/移除子节点），向上传播到根 |
+| `needUpdate`            | 局部矩阵变化（translate/rotate/scale）    |
+| `worldMatrixNeedUpdate` | 世界矩阵需要重新计算                      |
 
 只有标记为脏的节点和层才会参与当前帧的重绘，从而实现按需渲染。
 
@@ -47,14 +48,14 @@ console.log(p.toString()); // "M10,10L100,10L100,100Z"
 
 `IGraphicsRenderer` 接口定义了标准渲染 API：
 
-| 方法 | 说明 |
-|------|------|
-| `save() / restore()` | 保存/恢复渲染状态 |
-| `setTransform()` | 设置变换矩阵 |
-| `setAttributes()` | 设置视觉属性 |
-| `rect/circle/line/text/path/image` | 绘制命令 |
-| `clipPath()` | 裁剪路径 |
-| `gradient()` | 渐变填充 |
+| 方法                               | 说明              |
+| ---------------------------------- | ----------------- |
+| `save() / restore()`               | 保存/恢复渲染状态 |
+| `setTransform()`                   | 设置变换矩阵      |
+| `setAttributes()`                  | 设置视觉属性      |
+| `rect/circle/line/text/path/image` | 绘制命令          |
+| `clipPath()`                       | 裁剪路径          |
+| `gradient()`                       | 渐变填充          |
 
 Canvas2D（`rendx-canvas`）和 SVG（`rendx-svg`）各自实现该接口，上层代码不需关心渲染后端。
 
@@ -73,13 +74,7 @@ start → init → waiting →[elapsed ≥ delay]→ running →[elapsed > delay
 所有 Transform 通过 fluent API 配置：
 
 ```typescript
-node.useTransform()
-  .translate(100, 0)
-  .rotate(Math.PI)
-  .duration(1000)
-  .delay(500)
-  .easing('elasticOut')
-  .repeat(true);
+node.useTransform().translate(100, 0).rotate(Math.PI).duration(1000).delay(500).easing('elasticOut').repeat(true);
 ```
 
 ## 事件系统
@@ -91,11 +86,14 @@ node.useTransform()
 3. **Bubble**（冒泡）— 从目标节点回到根节点
 
 支持的事件类型：
+
 - `click`, `pointerdown`, `pointerup`, `pointermove`
 - `pointerenter`, `pointerleave`, `pointerover`, `pointerout`（模拟合成）
 - `wheel`
 
 ## 插件系统
+
+Rendx 通过 `Plugin` 接口提供可插拔的功能扩展。插件不创造新的概念层，而是在引擎原生 API 之上**约束代码组织边界**：
 
 ```typescript
 interface Plugin {
@@ -105,8 +103,21 @@ interface Plugin {
   dispose?(): void;
 }
 
-// 使用
+// 安装
 app.use(myPlugin);
+
+// 获取
+const plugin = app.getPlugin('name');
 ```
 
-内置插件：`rendx-grid-plugin`、`rendx-history-plugin`、`rendx-minimap-plugin`
+### 内置插件
+
+| 插件             | 包名                     | 用途                                                 |
+| ---------------- | ------------------------ | ---------------------------------------------------- |
+| Graph Plugin     | `rendx-graph-plugin`     | Node/Edge 生命周期管理、类型注册、依赖追踪、自动分层 |
+| Grid Plugin      | `rendx-grid-plugin`      | 点阵网格背景                                         |
+| History Plugin   | `rendx-history-plugin`   | 基于场景快照的撤销/重做                              |
+| Minimap Plugin   | `rendx-minimap-plugin`   | 缩略导航小地图                                       |
+| Selection Plugin | `rendx-selection-plugin` | 点击选中、框选、悬停高亮、命中委托                   |
+
+> 详细用法请参阅 [插件指南](./plugins)。

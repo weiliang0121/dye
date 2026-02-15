@@ -28,9 +28,11 @@ Layer 4 (顶层)
 └── rendx-engine       场景图引擎（整合所有包）
 
 插件
-├── rendx-grid-plugin     网格插件
-├── rendx-history-plugin  历史记录插件
-└── rendx-minimap-plugin  小地图插件
+├── rendx-graph-plugin      图元素生命周期管理插件
+├── rendx-grid-plugin       网格插件
+├── rendx-history-plugin    历史记录插件
+├── rendx-minimap-plugin    小地图插件
+└── rendx-selection-plugin  选框交互插件
 ```
 
 ## 渲染管线
@@ -73,23 +75,22 @@ EventObserver
 ## 关键类型
 
 ```typescript
-type GF = (...args: any[]) => any;           // 通用函数类型
-type AO = { [key: string]: any };            // 通用对象类型
-type Point = [number, number];               // 2D 坐标点
-type Vec2 = [number, number];                // 2D 向量
-type Mat2d = [number, number, number,
-              number, number, number];        // 2D 仿射矩阵
-type Size = { width: number; height: number }; // 尺寸
+type GF = (...args: any[]) => any; // 通用函数类型
+type AO = {[key: string]: any}; // 通用对象类型
+type Point = [number, number]; // 2D 坐标点
+type Vec2 = [number, number]; // 2D 向量
+type Mat2d = [number, number, number, number, number, number]; // 2D 仿射矩阵
+type Size = {width: number; height: number}; // 尺寸
 type RGBA = [number, number, number, number]; // 颜色
 ```
 
 ## 技术栈
 
-| 维度 | 选型 |
-|------|------|
-| 语言 | TypeScript 5.9+ (strict) |
-| 构建 | tsup (ESM + CJS + DTS) |
-| 编排 | Turborepo |
-| 包管理 | pnpm 9.x workspace |
-| 矩阵运算 | gl-matrix |
-| 事件系统 | eventemitter3 |
+| 维度     | 选型                     |
+| -------- | ------------------------ |
+| 语言     | TypeScript 5.9+ (strict) |
+| 构建     | tsup (ESM + CJS + DTS)   |
+| 编排     | Turborepo                |
+| 包管理   | pnpm 9.x workspace       |
+| 矩阵运算 | gl-matrix                |
+| 事件系统 | eventemitter3            |

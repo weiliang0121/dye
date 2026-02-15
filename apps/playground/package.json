@@ -12,6 +12,7 @@
     "rendx-engine": "workspace:^",
     "rendx-graph-plugin": "workspace:^",
     "rendx-history-plugin": "workspace:^",
+    "rendx-selection-plugin": "workspace:^",
     "rendx-path": "workspace:^",
     "rendx-curve": "workspace:^"
   },

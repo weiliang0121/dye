@@ -83,6 +83,9 @@ importers:
       rendx-path:
         specifier: workspace:^
         version: link:../../packages/path
+      rendx-selection-plugin:
+        specifier: workspace:^
+        version: link:../../packages/selection-plugin
     devDependencies:
       monaco-editor:
         specifier: ^0.52.2
@@ -217,6 +220,18 @@ importers:
         version: link:../engine
 
   packages/path: {}
+
+  packages/selection-plugin:
+    dependencies:
+      rendx-bounding:
+        specifier: workspace:^
+        version: link:../bounding
+      rendx-core:
+        specifier: workspace:^
+        version: link:../core
+      rendx-engine:
+        specifier: workspace:^
+        version: link:../engine
 
   packages/shape:
     dependencies:

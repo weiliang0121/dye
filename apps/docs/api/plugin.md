@@ -14,7 +14,7 @@ interface Plugin {
 ## 使用方式
 
 ```typescript
-import { App } from 'rendx-engine';
+import {App} from 'rendx-engine';
 
 const myPlugin: Plugin = {
   name: 'my-plugin',
@@ -29,7 +29,7 @@ const myPlugin: Plugin = {
   },
 };
 
-const app = new App({ width: 800, height: 600 });
+const app = new App({width: 800, height: 600});
 app.use(myPlugin);
 
 // 获取插件
@@ -38,11 +38,12 @@ const p = app.getPlugin('my-plugin');
 
 ## 内置插件
 
-| 插件 | 包 | 说明 |
-|------|---|------|
-| Grid | `rendx-grid-plugin` | 网格背景 |
-| History | `rendx-history-plugin` | 撤销/重做 |
-| Minimap | `rendx-minimap-plugin` | 缩略图导航 |
+| 插件      | 包                       | 说明                                |
+| --------- | ------------------------ | ----------------------------------- |
+| Grid      | `rendx-grid-plugin`      | 网格背景                            |
+| History   | `rendx-history-plugin`   | 撤销/重做                           |
+| Minimap   | `rendx-minimap-plugin`   | 缩略图导航                          |
+| Selection | `rendx-selection-plugin` | 选框交互（点选/多选/框选/悬停高亮） |
 
 ## 注意事项
 

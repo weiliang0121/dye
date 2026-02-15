@@ -41,9 +41,11 @@ Layer 4 (顶层)
 └── rendx-engine       场景图引擎（整合所有包）
 
 插件
-├── rendx-grid-plugin     网格插件
-├── rendx-history-plugin  历史记录插件
-└── rendx-minimap-plugin  小地图插件
+├── rendx-graph-plugin      图元素生命周期管理插件
+├── rendx-grid-plugin       网格插件
+├── rendx-history-plugin    历史记录插件
+├── rendx-minimap-plugin    小地图插件
+└── rendx-selection-plugin  选框交互插件
 ```
 
 ## 快速上手
@@ -97,24 +99,25 @@ app.render(); // 静态渲染一帧
 
 各包目录下的 `AGENTS.md` 文件包含完整的 API 参考和架构细节：
 
-| 包                   | 文档位置                            |
-| -------------------- | ----------------------------------- |
-| rendx-engine         | `packages/engine/AGENTS.md`         |
-| rendx-core           | `packages/core/AGENTS.md`           |
-| rendx-bounding       | `packages/bounding/AGENTS.md`       |
-| rendx-path           | `packages/path/AGENTS.md`           |
-| rendx-shape          | `packages/shape/AGENTS.md`          |
-| rendx-ease           | `packages/ease/AGENTS.md`           |
-| rendx-curve          | `packages/curve/AGENTS.md`          |
-| rendx-interpolate    | `packages/interpolate/AGENTS.md`    |
-| rendx-canvas         | `packages/canvas/AGENTS.md`         |
-| rendx-svg            | `packages/svg/AGENTS.md`            |
-| rendx-gradient       | `packages/gradient/AGENTS.md`       |
-| rendx-dom            | `packages/dom/AGENTS.md`            |
-| rendx-graph-plugin   | `packages/graph-plugin/AGENTS.md`   |
-| rendx-grid-plugin    | `packages/grid-plugin/AGENTS.md`    |
-| rendx-history-plugin | `packages/history-plugin/AGENTS.md` |
-| rendx-minimap-plugin | `packages/minimap-plugin/AGENTS.md` |
+| 包                     | 文档位置                              |
+| ---------------------- | ------------------------------------- |
+| rendx-engine           | `packages/engine/AGENTS.md`           |
+| rendx-core             | `packages/core/AGENTS.md`             |
+| rendx-bounding         | `packages/bounding/AGENTS.md`         |
+| rendx-path             | `packages/path/AGENTS.md`             |
+| rendx-shape            | `packages/shape/AGENTS.md`            |
+| rendx-ease             | `packages/ease/AGENTS.md`             |
+| rendx-curve            | `packages/curve/AGENTS.md`            |
+| rendx-interpolate      | `packages/interpolate/AGENTS.md`      |
+| rendx-canvas           | `packages/canvas/AGENTS.md`           |
+| rendx-svg              | `packages/svg/AGENTS.md`              |
+| rendx-gradient         | `packages/gradient/AGENTS.md`         |
+| rendx-dom              | `packages/dom/AGENTS.md`              |
+| rendx-graph-plugin     | `packages/graph-plugin/AGENTS.md`     |
+| rendx-grid-plugin      | `packages/grid-plugin/AGENTS.md`      |
+| rendx-history-plugin   | `packages/history-plugin/AGENTS.md`   |
+| rendx-minimap-plugin   | `packages/minimap-plugin/AGENTS.md`   |
+| rendx-selection-plugin | `packages/selection-plugin/AGENTS.md` |
 
 ## 编码规范
 

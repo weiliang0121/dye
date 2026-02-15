@@ -53,6 +53,10 @@ import graphPluginDemo from './demos/graph-plugin.js?raw';
 import elementLifecycleDemo from './demos/graph-lifecycle.js?raw';
 import elementHistoryDemo from './demos/graph-history.js?raw';
 
+// --- Plugin: Selection Plugin ---
+import selectionBasicDemo from './demos/selection-basic.js?raw';
+import selectionGraphDemo from './demos/selection-graph.js?raw';
+
 export interface Demo {
   name: string;
   code: string;
@@ -113,4 +117,8 @@ export const demos: Demo[] = [
   {name: '图插件 Graph Plugin', code: graphPluginDemo},
   {name: '元素生命周期 Element Lifecycle', code: elementLifecycleDemo},
   {name: '元素+历史 Element History', code: elementHistoryDemo},
+
+  // ── Plugin: Selection Plugin ──
+  {name: '选框插件 Selection Basic', code: selectionBasicDemo},
+  {name: '选框+图集成 Selection Graph', code: selectionGraphDemo},
 ];
