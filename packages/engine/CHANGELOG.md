@@ -1,5 +1,30 @@
 # @vis/engine
 
+## 0.4.0
+
+### Minor Changes
+
+- [`f1cb892`](https://github.com/weiliang0121/rendx/commit/f1cb892ad9f30e7760b804e886718f15bbdff51f) - feat(engine): PathShape 新增 box() 包围盒计算；App 新增光标管理 API
+
+  ### PathShape.box()
+  - PathShape 通过 `pathBBox()` 解析 d 字符串计算包围盒
+  - `from(d)` 现在正确设置 `needUpdate` 标记触发包围盒重算
+  - `getWorldBBox()` 对 path 类型节点不再返回 null
+
+  ### App 光标 API
+  - `app.setCursor(cursor: string)` — 设置容器鼠标光标样式
+  - `app.resetCursor()` — 重置光标为默认值
+
+  新增 path-shape.test.ts 测试（5 个用例）
+
+### Patch Changes
+
+- Updated dependencies [[`f1cb892`](https://github.com/weiliang0121/rendx/commit/f1cb892ad9f30e7760b804e886718f15bbdff51f)]:
+  - rendx-path@0.2.0
+  - rendx-canvas@0.1.1
+  - rendx-shape@0.1.2
+  - rendx-svg@0.1.1
+
 ## 0.3.0
 
 ### Minor Changes

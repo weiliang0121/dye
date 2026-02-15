@@ -1,5 +1,12 @@
 # rendx-graph-plugin
 
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies [[`f1cb892`](https://github.com/weiliang0121/rendx/commit/f1cb892ad9f30e7760b804e886718f15bbdff51f)]:
+  - rendx-engine@0.4.0
+
 ## 0.1.0
 
 ### Minor Changes
