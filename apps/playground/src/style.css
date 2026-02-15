@@ -68,6 +68,21 @@ body {
 #demo-list {
   list-style: none;
   padding: 8px 0;
+  flex: 1;
+}
+
+.editor-link {
+  display: block;
+  padding: 10px 16px;
+  font-size: 12px;
+  color: var(--accent);
+  text-decoration: none;
+  border-top: 1px solid var(--sidebar-active);
+  transition: background 0.15s;
+}
+
+.editor-link:hover {
+  background: var(--sidebar-hover);
 }
 
 #demo-list li {

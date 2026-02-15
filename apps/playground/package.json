@@ -15,6 +15,8 @@
     "rendx-selection-plugin": "workspace:^",
     "rendx-drag-plugin": "workspace:^",
     "rendx-connect-plugin": "workspace:^",
+    "rendx-grid-plugin": "workspace:^",
+    "rendx-minimap-plugin": "workspace:^",
     "rendx-path": "workspace:^",
     "rendx-curve": "workspace:^"
   },

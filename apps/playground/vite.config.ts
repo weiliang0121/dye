@@ -18,6 +18,20 @@ export default defineConfig({
       'rendx-gradient': path.resolve(__dirname, '../../packages/gradient/src/main.ts'),
       'rendx-dom': path.resolve(__dirname, '../../packages/dom/src/main.ts'),
       'rendx-graph-plugin': path.resolve(__dirname, '../../packages/graph-plugin/src/main.ts'),
+      'rendx-selection-plugin': path.resolve(__dirname, '../../packages/selection-plugin/src/main.ts'),
+      'rendx-drag-plugin': path.resolve(__dirname, '../../packages/drag-plugin/src/main.ts'),
+      'rendx-connect-plugin': path.resolve(__dirname, '../../packages/connect-plugin/src/main.ts'),
+      'rendx-history-plugin': path.resolve(__dirname, '../../packages/history-plugin/src/main.ts'),
+      'rendx-grid-plugin': path.resolve(__dirname, '../../packages/grid-plugin/src/main.ts'),
+      'rendx-minimap-plugin': path.resolve(__dirname, '../../packages/minimap-plugin/src/main.ts'),
+    },
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        editor: path.resolve(__dirname, 'editor.html'),
+      },
     },
   },
   server: {

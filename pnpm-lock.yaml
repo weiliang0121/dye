@@ -83,9 +83,15 @@ importers:
       rendx-graph-plugin:
         specifier: workspace:^
         version: link:../../packages/graph-plugin
+      rendx-grid-plugin:
+        specifier: workspace:^
+        version: link:../../packages/grid-plugin
       rendx-history-plugin:
         specifier: workspace:^
         version: link:../../packages/history-plugin
+      rendx-minimap-plugin:
+        specifier: workspace:^
+        version: link:../../packages/minimap-plugin
       rendx-path:
         specifier: workspace:^
         version: link:../../packages/path
