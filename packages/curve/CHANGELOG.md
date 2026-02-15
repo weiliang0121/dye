@@ -1,5 +1,12 @@
 # @vis/curve
 
+## 0.1.2
+
+### Patch Changes
+
+- Updated dependencies [[`f1cb892`](https://github.com/weiliang0121/rendx/commit/f1cb892ad9f30e7760b804e886718f15bbdff51f)]:
+  - rendx-path@0.2.0
+
 ## 0.1.1
 
 ### Patch Changes
