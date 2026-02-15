@@ -221,6 +221,7 @@ export class ConnectPlugin implements Plugin {
     });
     // 默认隐藏，永久挂载到 overlay 层
     this.#previewLine.setDisplay(false);
+    this.#previewLine.setName('connect-preview-line');
     this.#overlayLayer!.add(this.#previewLine);
   }
 
@@ -233,13 +234,11 @@ export class ConnectPlugin implements Plugin {
 
     this.#previewLine.shape.from(pathData);
     this.#previewLine.setDisplay(true);
-    this.#previewLine.setDirty(true);
   }
 
   #hidePreview() {
     if (!this.#previewLine) return;
     this.#previewLine.setDisplay(false);
-    this.#previewLine.setDirty(true);
   }
 
   // ════════════════════════════════════════════════════════════

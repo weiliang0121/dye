@@ -74,7 +74,8 @@ export class Scene extends Graphics {
         });
       }
       queue.sort((a, b) => a.ez - b.ez);
-      this.setDirty(false);
+      // 只清自身缓存标记，不向下传播（避免清除子层的渲染脏标记）
+      this.dirty = false;
       this.#queue = queue;
     }
     return this.#queue;

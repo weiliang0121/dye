@@ -63,7 +63,8 @@ export class Layer extends Group {
         if (node.type === 3) queue.push(node as Node);
       });
       queue.sort((a, b) => a.ez - b.ez);
-      this.setDirty(false);
+      // 只清自身缓存标记，不向下传播（避免 pick() 调用时清除子节点的渲染脏标记）
+      this.dirty = false;
       this.#queue = queue;
     }
     return this.#queue;
@@ -80,6 +81,8 @@ export class Layer extends Group {
     if (this.isEventLayer) return;
     this.update();
     const queue = this.getQueue();
+    // draw 完成后清除整棵子树的脏标记（pick 调用 getQueue 不会清除）
+    this.setDirty(false);
     this.renderer.draw(this.culling ? this.#cullViewport(queue) : queue);
   }
 
@@ -103,7 +106,10 @@ export class Layer extends Group {
       }
 
       const m = node.worldMatrix;
-      const x0 = bb.x, y0 = bb.y, x1 = bb.right, y1 = bb.bottom;
+      const x0 = bb.x,
+        y0 = bb.y,
+        x1 = bb.right,
+        y1 = bb.bottom;
 
       // 通过 worldMatrix 变换四角点，计算世界空间 AABB
       let wx: number, wy: number;
