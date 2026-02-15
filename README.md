@@ -22,8 +22,10 @@
 - ⚡ **高性能** — 多 Canvas 分层渲染、视口裁剪、Z 排序缓存
 - 🎬 **动画系统** — 几何变换 / 属性 / 裁剪 / 弧线 / 扇形 5 种动画，33 种缓动函数
 - 🖱️ **事件系统** — 完整 W3C 三阶段事件流（capture → target → bubble）
-- 📦 **Monorepo** — 12 个包分层架构，按需引用，Tree-shakable
-- 🔌 **插件化** — Grid / History / Minimap 内置插件
+- 📦 **Monorepo** — 17 个包分层架构，按需引用，Tree-shakable
+- 🔌 **插件化** — Graph / Selection / Grid / History / Minimap 五大内置插件
+- 🖱️ **选框交互** — 点击选中、Shift 多选、框选、悬停高亮、命中委托、自定义 overlay
+- 📊 **图数据管理** — Node/Edge 生命周期、类型注册、依赖追踪、序列化/反序列化
 - 💾 **序列化** — toJSON / fromJSON 场景持久化
 
 ## 快速开始
@@ -33,16 +35,16 @@ npm install rendx-engine
 ```
 
 ```typescript
-import { App, Node } from 'rendx-engine';
+import {App, Node} from 'rendx-engine';
 
-const app = new App({ width: 800, height: 600 });
+const app = new App({width: 800, height: 600});
 app.mount(document.getElementById('container')!);
 
-const circle = Node.create('circle', { fill: '#ff0000', stroke: '#333' });
+const circle = Node.create('circle', {fill: '#ff0000', stroke: '#333'});
 circle.shape.from(400, 300, 50);
 app.scene.add(circle);
 
-const rect = Node.create('rect', { fill: '#0066ff', opacity: 0.8 });
+const rect = Node.create('rect', {fill: '#0066ff', opacity: 0.8});
 rect.shape.from(100, 100, 200, 150);
 app.scene.add(rect);
 
@@ -75,9 +77,11 @@ Layer 4
 └── rendx-engine       场景图引擎
 
 插件
-├── rendx-grid-plugin     网格插件
-├── rendx-history-plugin  历史记录插件
-└── rendx-minimap-plugin  小地图插件
+├── rendx-graph-plugin      图元素生命周期管理
+├── rendx-grid-plugin       网格背景
+├── rendx-history-plugin    撤销/重做
+├── rendx-minimap-plugin    小地图导航
+└── rendx-selection-plugin  选框交互
 ```
 
 ## 文档
