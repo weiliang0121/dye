@@ -1,205 +1,199 @@
 # 为什么选择 Rendx
 
-## 背景
+## 一个类比
 
-在 2D 可视化领域（图表、图编辑、图分析、数据表格），开发者需要一个介于"直接操作 Canvas API"和"重量级全功能引擎"之间的渲染层。
+如果你用过 Ant Design 再用 shadcn/ui，你会理解 Rendx 在做什么。
 
-现有方案各有困境：
+Ant Design 给你一个完整的组件库：设计规范、主题系统、国际化、无障碍，开箱即用。代价是——你得接受它的一切决定。想改 DatePicker 的交互行为？在几千行源码里找到干预点。想换掉 Modal 的动画？先理解它的 CSSMotion 系统。组件越"完整"，你偏离默认行为的成本越高。
 
-- **PixiJS** — 性能极强，但定位偏游戏/多媒体，API 不面向可视化场景，学习曲线陡峭
-- **Fabric.js / Konva** — 交互能力好，但单体架构、无法按需引用、性能上限不高
-- **AntV/G** — 功能全面，但追求 DOM/CSS 兼容导致架构过重，每个节点的创建和更新成本高
-- **ZRender** — ECharts 的底层，但与 ECharts 耦合深，独立使用文档匮乏
+shadcn/ui 换了个思路：把组件源码直接复制到你的项目里，你拥有它、修改它、删掉你不需要的部分。它不是一个"库"，而是**一组可以自由组合的模板**。底层用的是 Radix Primitives 这些无样式原语——你在 shadcn/ui 里写的代码和不用 shadcn/ui 写的代码，调用的是同一层 API。
 
-Rendx 的出发点很简单：**用最小的代码体积，覆盖 Canvas 2D 可视化场景的核心能力。**
+**在 2D 可视化领域，AntV（G2/G6/X6）走的是 Ant Design 的路。Rendx 走的是 shadcn/ui 的路。**
+
+## 框架兜售选择，基建赋予自由
+
+D3 在统计图表领域存活了 15 年。在这期间，ECharts、Highcharts、Chart.js、Recharts 轮番更迭，每一代都声称自己"更好用"。但它们底层都在复用 D3 的原语——d3-scale 做映射、d3-shape 造路径、d3-interpolate 做插值。
+
+**框架来了又走，基建永远在。**
+
+D3 难用，但它活得最久。不是因为 API 好，是因为它占据了正确的抽象层级：**不替用户做决定，只提供做决定的工具。**
+
+G2 用声明式 spec 描述图表——几行配置就能出一张柱状图，demo 阶段很爽。但当你想做一个非标准 tooltip、在饼图上叠自定义标注、或者让两个图表共享坐标轴联动时，你得钻进 G2 内部几十个中间层去找干预点。"声明式"意味着框架替你做了 100 个决定，你想改第 73 个时，前 72 个都成了障碍。
+
+X6 替你做好了端口模型、边路由、对齐线、快捷键、剪贴板。开箱即用的代价是——当你的业务需求偏离 X6 的预设 5% 时，你要花 50% 的精力去跟框架搏斗。
+
+**Rendx 不兜售仓库，不替你做决定。它给你选择权。**
 
 ## 设计哲学
 
-### 1. 尊重 Canvas 的本质
+### 1. 同一套 API，从底层到业务
 
-Canvas 是**即时模式**渲染接口 — 调一次 `fillRect()` 就画一个矩形，没有 DOM 节点、没有样式继承、没有事件冒泡。这不是缺陷，而是设计意图：用最低成本完成图形输出。
+Rendx 的核心只有 5 个概念：`App`、`Scene`、`Layer`、`Group`、`Node`。
 
-一些引擎试图在 Canvas 上重建 DOM — 给每个图形节点挂载事件、模拟 CSS 属性计算、实现 `querySelector` 查询。这本质上是用 JavaScript 重写浏览器内核中 C++ 实现的能力：
+插件不会发明新概念。`graph-plugin` 内部用 `Node.create` 和 `Group.add`。`selection-plugin` 用 `Layer` 画选框。`drag-plugin` 用 `translate` 移动节点。你在插件内部写的代码和不用插件写的代码，**调用的是同一层 API**——就像 shadcn/ui 里的组件代码和你自己手写的 React 代码没有区别。
 
-- 浏览器的 DOM 树遍历、事件冒泡、样式计算经过了 20 年优化
-- JavaScript 重实现的版本不可能比原生更快
-- 却让每个节点的创建成本从 ~0 增长到 3-5 倍
+这意味着：
 
-Rendx 的选择：保留 Canvas 的即时模式本质，只在必要处添加结构（场景图用于管理渲染顺序和变换传播，事件系统用于交互），不模拟 DOM。
+- 不存在"引擎能做但插件不让做"的能力壁垒
+- 理解了引擎 API 就理解了所有插件的实现
+- 你可以复制一个插件的源码，改成你要的样子，成本很低
 
-### 2. 不做无效封装
+### 2. 原语 > 框架
 
-有效封装的判断标准很简单：**封装前后，使用者的心智模型是否跨越了抽象层级。**
+D3 在统计可视化领域证明了：基建比框架更持久。Rendx 在渲染领域做同样的事。
 
-Three.js 用 `MeshStandardMaterial({ color, roughness })` 封装底层 shader 的 uniform 传递、光照计算、PBR 管线 — 这是**有效封装**，因为使用者从"GPU 指令"跨越到了"材质属性"，两个完全不同的抽象层级。
+12 个包，每个职责单一，独立可用：
 
-而在 Canvas 2D 上，原生 API 已经在人类直觉层面操作：
+```
+rendx-path       生成 SVG 路径字符串，零依赖
+rendx-shape      几何形状生成器，不绑定渲染器
+rendx-curve      12 种曲线插值，不绑定场景图
+rendx-ease       20+ 种缓动函数，纯数学
+rendx-interpolate 数值/颜色/向量/矩阵插值
+rendx-bounding   包围盒计算
+rendx-gradient   渐变解析
+```
+
+你可以只用 `rendx-path` 生成路径字符串给 SVG 用，不引入任何渲染逻辑。也可以只用 `rendx-shape` + `rendx-canvas` 做轻量绑定，跳过场景图。每个包都能脱离 Rendx 体系独立存活——这才是基建。
+
+### 3. 透明 > 方便
 
 ```javascript
-// 原生 Canvas — 人类直觉：「画一个矩形」
-ctx.fillRect(x, y, width, height);
+// Rendx — 你知道发生了什么
+const rect = Node.create('rect', {fill: '#f00'});
+rect.shape.from(0, 0, 100, 50);
+layer.add(rect);
+app.render();
 
-// DSL 封装 — 仍然是：「画一个矩形」
-engine.addShape({type: 'rect', x, y, width, height});
+// AntV/G — 你不知道发生了什么
+const rect = new Rect({style: {x: 0, y: 0, width: 100, height: 50, fill: '#f00'}});
+// 背后：属性解析 → CSS 继承计算 → 脏标记 → 动画检测 → 布局计算 → ...
 ```
 
-两者在同一个抽象层级。DSL 翻译的价值为零 — 只增加了一层间接调用和一个需要学习的 API。
+D3 难用但透明。jQuery 好用但不透明。jQuery 死了，D3 还在。
 
-Rendx 不制造"看起来优雅但实际上只是翻译"的封装。`Node.create('rect', { fill: '#f00' })` 直接映射到 Canvas 原语，没有中间层。
+"方便"是一个危险的设计目标。你花 5 分钟用配置搞定了 demo，然后花 5 天去对抗配置当你的需求偏离框架预设。Rendx 选择让前 5 分钟稍微慢一点，换取后 5 天不存在。
 
-### 3. 够用就好，不做错误抽象
+### 4. 尊重 Canvas 的本质
 
-Rendx 不会把 Canvas 包装成 DOM。不提供 `querySelector`、不模拟 CSS 继承、不引入依赖注入容器。
+Canvas 是即时模式渲染接口。调一次 `fillRect()` 就画一个矩形，没有 DOM 节点、没有样式继承。
 
-这些"看起来方便"的抽象，在实际可视化场景中往往带来更多问题：
+一些引擎试图在 Canvas 上重建 DOM——CSS 属性计算、`querySelector` 查询、样式继承链。这是用 JavaScript 重写浏览器内核中 C++ 优化了 20 年的能力——不可能更快，只会更重。
 
-- CSS 属性计算让每个节点变重 3-5 倍
-- DOM 模拟 API 给人"可以插入 React 组件"的错觉，但实际做不好
-- DI 容器让调试链路变得不透明
+Rendx 保留 Canvas 的即时模式本质。场景图只管渲染顺序和变换传播，事件系统只管交互，不模拟 DOM。
 
-Rendx 直接暴露图形编程原语：`Node.create('circle', { fill: '#f00' })` — 没有中间层。
+### 5. 插件是模板，不是黑箱
 
-### 4. 分层不分家
+Rendx 的插件系统和 shadcn/ui 的组件一样：**插件是被约束的代码组织方式，不是被封装的能力壁垒。**
+
+插件存在的目的是降低使用成本——给你一个"基础可用的模板"，省去从头搭建的时间。但你随时可以：
+
+- 看源码理解它做了什么（因为用的是同一套 API）
+- 复制出来按需修改（因为没有私有魔法）
+- 只用其中两三个，把其余的扔掉（因为零耦合）
+- 自己写一个替代品（因为不存在"插件专用 API"）
+
+这和 X6 的插件截然不同。X6 的 Port 系统、边路由、Stencil 面板是框架的一部分，你不能绕过它们，也很难替换它们。
+
+### 6. 一个引擎，覆盖多个领域
+
+AntV 生态里，X6 做图编辑、G6 做图分析、G2 做图表、S2 做表格。四个框架、四套概念体系、四种插件协议、四种主题系统。你在项目里同时需要图编辑和图表？引两个框架，学两套 API。
+
+Rendx 用一个引擎覆盖所有 Canvas 2D 可视化场景：
 
 ```
-Layer 0: core / bounding / path / ease     (零依赖)
-Layer 1: dom / curve                        (仅依赖 Layer 0)
-Layer 2: interpolate / shape / gradient     (依赖 Layer 0-1)
-Layer 3: canvas / svg                       (渲染器实现)
-Layer 4: engine                             (场景图引擎)
+rendx-engine (统一渲染层)
+├── graph-plugin     → 图编辑
+├── selection-plugin → 选中交互
+├── drag-plugin      → 拖拽
+├── connect-plugin   → 连线
+├── grid-plugin      → 网格
+├── history-plugin   → 撤销重做
+├── minimap-plugin   → 小地图
+└── (未来) chart-plugin / table-plugin / ...
 ```
 
-12 个包，每个包职责单一，严格按层级依赖。你可以只用 `rendx-path` 生成 SVG 路径字符串，不引入任何渲染逻辑；也可以只用 `rendx-shape` + `rendx-canvas` 做轻量绑定，跳过场景图。
+所有插件共享同一个 `App`、同一个 `Scene`、同一套事件系统。图编辑器节点内嵌一个迷你图表，只需要在同一个场景图里多加几个 Node——不需要引入第二个框架、不需要跨框架通信、不需要协调两套渲染循环。
 
-### 5. 性能来自正确的架构，而非过度优化
+### 7. 性能来自正确的架构
 
-- **多 Canvas 分层渲染** — 每个 Layer 持有独立 Canvas，互不干扰
-- **三级脏标记** — `dirty`（结构变化）、`needUpdate`（局部矩阵）、`worldMatrixNeedUpdate`（传播标记），精确控制更新粒度
+- **多 Canvas 分层** — 每个 Layer 独立 Canvas，互不干扰。overlay 更新不触发数据层重绘
+- **三级脏标记** — `dirty`（结构变化）→ `needUpdate`（局部矩阵）→ `worldMatrixNeedUpdate`（传播标记），精确控制更新粒度
 - **视口裁剪** — 画布外的节点不进入渲染管线
-- **惰性 EventEmitter** — 不监听事件的节点不创建 emitter，5000 个节点省 5000 个对象
+- **惰性 EventEmitter** — 不监听事件的节点不创建 emitter
 
-这些都不是"黑魔法优化"，而是正确的架构选择。
+这些不是"黑魔法优化"，是正确的架构选择——不做不需要做的事。
 
-### 6. 不跨界
+### 8. 知道自己不做什么
 
-Canvas 2D 适合 2000-5000 个节点的场景。超过这个量级，正确做法是换 WebGL 引擎（如 PixiJS），而不是在 Canvas 2D 上硬优化。
+Canvas 2D 适合几千个节点。超过万级，正确做法是换 WebGL 引擎，而不是在 Canvas 2D 上硬优化。Rendx 不提供 WebGL 后端，不做滤镜，不做富文本——这些在图表/图编辑场景中使用率极低，但实现成本极高。
 
-Rendx 不提供 WebGL 后端，这是有意的取舍。与其做一个"什么都能，什么都不精"的引擎，不如在 Canvas 2D 这个精确区间做到极致的效率比。
+不跨界，才能在自己的区间做到极致的效率比。
 
-同理，Rendx 不做滤镜、不做阴影混合、不做富文本编辑 — 这些在图表/图编辑场景中使用率极低，但实现成本极高。
+### 9. 面向 AI 时代的可预测性
 
-### 7. 插件是约束边界，不是能力壁垒
+当 AI 辅助编程成为常态，代码库的**可预测性**比**功能丰富度**更重要：
 
-Rendx 没有内置图编辑功能（节点管理、连线、撤销重做），不是因为做不到，而是因为这些属于**应用层逻辑**，不应该固化在渲染引擎中。
+- 5 个核心概念，无 DI 容器、无 CSS 继承树、无虚拟 DOM diff
+- `Node.create('rect', { fill: '#f00' })` — 没有隐式行为，输入/输出确定
+- TypeScript strict 模式，所有 API 类型完备
+- 插件间 `app.getPlugin()` 运行时软感知，无 import 硬依赖
 
-插件系统的设计目标是**组织代码的边界**，而不是隐藏底层能力：
-
-- `graph-plugin` 用 `createNode` / `createEdge` 管理节点生命周期 — 但 render 函数内部直接使用 `Node.create` / `Group.add` 等引擎原生 API
-- `selection-plugin` 用独立 Layer 绘制选框 overlay — 不修改目标节点本身
-- `drag-plugin` 通过 `app.getPlugin()` 软感知其他插件 — 无硬依赖，单独安装也能工作
-- `grid-plugin` 用引擎原生的 `Layer` + `Node` 画网格 — 没有引入任何网格专用的抽象
-- `history-plugin` 用 `app.toJSON()` / `restoreFromJSON()` 做快照 — 没有自己的序列化格式
-
-插件不创造新的概念层，只约束代码组织方式。使用者在插件内外写的代码，用的是同一套 API。
-
-### 8. 面向 AI 时代的可预测性
-
-当 AI 辅助编程成为常态，代码库的**可预测性**比"功能丰富度"更重要：
-
-- **概念少** — Rendx 核心只有 5 个概念：App、Scene、Layer、Group、Node。不需要理解 DI 容器、CSS 属性继承树、虚拟 DOM diff 算法
-- **无隐式行为** — `Node.create('rect', { fill: '#f00' })` 就是创建一个矩形节点。没有自动布局、没有样式继承、没有全局状态注入
-- **线性调用链** — 创建 → 设置属性 → 添加到场景图 → 渲染。每一步的输入/输出都是确定的
-- **类型完备** — TypeScript strict 模式，所有 API 都有精确的类型签名
-- **插件软感知** — 插件间通过 `app.getPlugin()` 运行时探测协作，而不是 import 硬依赖，减少 AI 需要理解的耦合关系
-
-对 AI 来说，能通过类型签名推断出正确调用方式的 API，比需要阅读大量文档才能理解隐式约定的 API，生产力高一个数量级。
+AI 能通过类型签名推断出正确调用方式的 API，生产力远高于需要阅读大量文档才能理解隐式约定的 API。
 
 ## 横向对比
 
+### 架构对比
+
+| 维度           | Rendx                        | AntV (G/G2/G6/X6)                          |
+| -------------- | ---------------------------- | ------------------------------------------ |
+| 渲染节点模型   | 轻量 Graphics（无 CSS）      | 模拟 DOM（CSS 属性计算 + 样式继承）        |
+| 插件与引擎关系 | 同一套 API，源码即模板       | 框架内部 API，替换成本高                   |
+| 跨领域         | 一个引擎覆盖图编辑/图表/表格 | X6/G6/G2/S2 四个独立框架                   |
+| 定制成本       | 低（复制插件源码直接改）     | 高（需理解框架内部抽象层）                 |
+| 包组合方式     | 12 个独立原语包，按需引用    | 捆绑在 @antv/g 体系内                      |
+| 概念密度       | 5 个核心概念                 | 20+ 概念（Shape/Display/Style/Plugin/...） |
+
 ### 代码量 vs 能力覆盖
 
-| 引擎      | 源码行数     | 核心能力覆盖                                      |
-| --------- | ------------ | ------------------------------------------------- |
-| Rendx     | ~7,800 行    | 场景图 + 双渲染后端 + 动画 + 事件 + 序列化 + 插件 |
-| Konva     | ~30,000 行   | 场景图 + Canvas + 动画 + 事件                     |
-| ZRender   | ~40,000 行   | 场景图 + Canvas/SVG + 动画 + 事件                 |
-| AntV/G    | ~50,000+ 行  | 场景图 + Canvas/SVG/WebGL + CSS 兼容 + 动画       |
-| Fabric.js | ~60,000 行   | Canvas + 对象编辑 + 序列化 + SVG 导出             |
-| PixiJS    | ~100,000+ 行 | WebGL/WebGPU + Canvas 回退 + 动画 + 滤镜          |
+| 引擎      | 源码行数    | 核心能力                                          |
+| --------- | ----------- | ------------------------------------------------- |
+| Rendx     | ~7,800 行   | 场景图 + 双渲染后端 + 动画 + 事件 + 序列化 + 插件 |
+| Konva     | ~30,000 行  | 场景图 + Canvas + 动画 + 事件                     |
+| ZRender   | ~40,000 行  | 场景图 + Canvas/SVG + 动画 + 事件                 |
+| AntV/G    | ~50,000+ 行 | 场景图 + Canvas/SVG/WebGL + CSS 兼容 + 动画       |
+| Fabric.js | ~60,000 行  | Canvas + 对象编辑 + 序列化 + SVG 导出             |
 
-Rendx 用 **不到 1/5 的代码量** 实现了同类引擎 **60-70% 的核心渲染能力**。
+### 能力矩阵
 
-### 功能对比
-
-| 能力                  | Rendx | Konva | AntV/G | PixiJS  |
-| --------------------- | ----- | ----- | ------ | ------- |
-| Canvas 2D             | ✅    | ✅    | ✅     | ✅ 回退 |
-| SVG                   | ✅    | ❌    | ✅     | ❌      |
-| WebGL                 | ❌    | ❌    | ✅     | ✅      |
-| 多 Canvas 分层        | ✅    | ✅    | ❌     | ❌      |
-| 三阶段事件流          | ✅    | ❌    | ✅     | ✅      |
-| composedPath          | ✅    | ❌    | ✅     | ❌      |
-| pointerEvents 穿透    | ✅    | ❌    | ✅     | ✅      |
-| 视口裁剪              | ✅    | ❌    | ✅     | ✅      |
-| 序列化                | ✅    | ✅    | ❌     | ❌      |
-| 插件系统              | ✅    | ❌    | ✅     | ✅      |
-| TypeScript strict     | ✅    | ✅    | ✅     | ✅      |
-| Monorepo + Tree-shake | ✅    | ❌    | ✅     | ✅      |
-
-### 事件系统
-
-Rendx 实现了完整的 **W3C 三阶段事件模型**（capture → target → bubble）。这在轻量级 Canvas 引擎中极为少见 — Konva 只有 bubble，Fabric.js 只有 target。
-
-```js
-// 捕获阶段
-outer.on('click', handler, {capture: true});
-
-// 冒泡阶段
-inner.on('click', handler);
-
-// 路径追踪
-e.composedPath(); // [target, inner, outer, scene]
-```
+| 能力              | Rendx | Konva | AntV/G | PixiJS |
+| ----------------- | ----- | ----- | ------ | ------ |
+| Canvas 2D         | ✅    | ✅    | ✅     | ✅     |
+| SVG               | ✅    | ❌    | ✅     | ❌     |
+| 多 Canvas 分层    | ✅    | ✅    | ❌     | ❌     |
+| 三阶段事件流      | ✅    | ❌    | ✅     | ✅     |
+| 视口裁剪          | ✅    | ❌    | ✅     | ✅     |
+| 序列化            | ✅    | ✅    | ❌     | ❌     |
+| 包级别 Tree-shake | ✅    | ❌    | ✅     | ✅     |
 
 ### 动画系统
 
-Rendx 内置 5 种 Transform 子类，覆盖从几何变换到数据可视化的动画需求：
-
-| Transform            | 用途                         | 其他引擎                |
-| -------------------- | ---------------------------- | ----------------------- |
-| `GraphicsTransform`  | translate / rotate / scale   | 各引擎均有              |
-| `AttributeTransform` | opacity / fill / stroke 插值 | Konva Tween / G animate |
-| `ClipBoxTransform`   | 裁剪框揭露动效 (lr/rl/tb/bt) | **Rendx 独有**          |
-| `ArcTransform`       | 弧线角度动画                 | 需手动实现              |
-| `SectorTransform`    | 扇形角度 + 半径动画          | 需手动实现              |
-
-状态机式的动画控制（7 种状态：start → init → waiting → running → last → end/clear），比简单的 tween 系统更精确可控。
-
-## 适用场景
-
-Rendx 最适合以下场景：
-
-| 场景                   | 说明                                                               |
-| ---------------------- | ------------------------------------------------------------------ |
-| 📊 **图表可视化**      | 柱状图、折线图、饼图、仪表盘等 — 内置 Arc/Sector/Area/Polygon 图形 |
-| 🔀 **图编辑 / 流程图** | 节点拖拽、连线、层级管理 — 场景图 + 事件系统                       |
-| 📋 **Canvas 表格**     | 大数据量单元格渲染 — RectBuffer 批量渲染 + Layer 分层 (冻结行列)   |
-| 🎨 **图形标注**        | 图片上叠加标注 — 图片加载 + 图形绘制 + 序列化保存                  |
-
-## 不适用场景
-
-| 场景                                | 推荐替代              |
-| ----------------------------------- | --------------------- |
-| 万级节点实时渲染                    | PixiJS (WebGL)        |
-| 3D 可视化                           | Three.js / Babylon.js |
-| 需要大量 React/Vue 组件插入的编辑器 | ReactFlow / tldraw    |
-| 游戏开发                            | Phaser / PixiJS       |
-| 需要 CSS 滤镜/阴影的设计工具        | Fabric.js             |
+| Transform            | 用途                         | 同类引擎       |
+| -------------------- | ---------------------------- | -------------- |
+| `GraphicsTransform`  | translate / rotate / scale   | 各引擎均有     |
+| `AttributeTransform` | opacity / fill / stroke 插值 | Konva Tween 等 |
+| `ClipBoxTransform`   | 裁剪框揭露动效 (lr/rl/tb/bt) | **Rendx 独有** |
+| `ArcTransform`       | 弧线角度动画                 | 需手动实现     |
+| `SectorTransform`    | 扇形角度 + 半径动画          | 需手动实现     |
 
 ## 总结
 
-Rendx 不追求"大而全"。它的核心价值是：
+Rendx 不是一个更好的 X6，也不是一个更好的 G2。
 
-> **在 Canvas 2D 可视化这个精确区间，以最小的体积和最清晰的架构，提供生产可用的渲染能力。**
+它是**一组可自由组合的 2D 可视化渲染原语**——底层提供干净的基建（path、shape、curve、ease、interpolate），中层提供完整的渲染引擎（场景图、事件、动画、分层渲染），上层提供可拆可改的插件模板（图编辑、选中、拖拽、连线、网格、撤销）。
 
-如果你的项目是图表、图编辑、数据表格等典型 2D 可视化场景，节点数在 5000 以内，Rendx 会是一个轻量、高效、易于理解的选择。
+每一层都用同一套 API。插件不是黑箱，是模板。你可以全用、部分用、改着用、或者只用底层原语自己搭。
+
+> **框架让你快速开始，然后在你偏离预设时阻止你。基建让你自己开始，然后在你走多远时都支撑你。**
+
+Rendx 选择做基建。

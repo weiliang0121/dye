@@ -100,10 +100,10 @@ interface ConnectCancelEvent {
 
 ## State
 
-| Key                  | 类型      | 说明         |
-| -------------------- | --------- | ------------ | ------------ |
-| `connect:connecting` | `boolean` | 是否正在连接 |
-| `connect:source`     | `Graphics | null`        | 当前连接起点 |
+| Key                  | 类型               | 说明         |
+| -------------------- | ------------------ | ------------ |
+| `connect:connecting` | `boolean`          | 是否正在连接 |
+| `connect:source`     | `Graphics \| null` | 当前连接起点 |
 
 ## 光标管理
 
