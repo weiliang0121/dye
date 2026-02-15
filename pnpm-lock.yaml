@@ -71,6 +71,9 @@ importers:
       rendx-curve:
         specifier: workspace:^
         version: link:../../packages/curve
+      rendx-drag-plugin:
+        specifier: workspace:^
+        version: link:../../packages/drag-plugin
       rendx-engine:
         specifier: workspace:^
         version: link:../../packages/engine
@@ -134,6 +137,15 @@ importers:
       rendx-core:
         specifier: workspace:^
         version: link:../core
+
+  packages/drag-plugin:
+    dependencies:
+      rendx-core:
+        specifier: workspace:^
+        version: link:../core
+      rendx-engine:
+        specifier: workspace:^
+        version: link:../engine
 
   packages/ease: {}
 

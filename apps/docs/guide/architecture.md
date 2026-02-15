@@ -28,6 +28,7 @@ Layer 4 (顶层)
 └── rendx-engine       场景图引擎（整合所有包）
 
 插件
+├── rendx-drag-plugin       拖拽交互插件
 ├── rendx-graph-plugin      图元素生命周期管理插件
 ├── rendx-grid-plugin       网格插件
 ├── rendx-history-plugin    历史记录插件
@@ -86,11 +87,14 @@ type RGBA = [number, number, number, number]; // 颜色
 
 ## 技术栈
 
-| 维度     | 选型                     |
-| -------- | ------------------------ |
-| 语言     | TypeScript 5.9+ (strict) |
-| 构建     | tsup (ESM + CJS + DTS)   |
-| 编排     | Turborepo                |
-| 包管理   | pnpm 9.x workspace       |
-| 矩阵运算 | gl-matrix                |
-| 事件系统 | eventemitter3            |
+| 维度     | 选型                              |
+| -------- | --------------------------------- |
+| 语言     | TypeScript 5.9+ (strict)          |
+| 构建     | tsup (ESM + CJS + DTS)            |
+| 编排     | Turborepo                         |
+| 包管理   | pnpm 9.x workspace                |
+| 代码质量 | ESLint 9.x + Prettier 3.8         |
+| 提交规范 | commitlint + Conventional Commits |
+| 版本管理 | Changesets                        |
+| 矩阵运算 | gl-matrix                         |
+| 事件系统 | eventemitter3                     |

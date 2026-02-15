@@ -95,6 +95,8 @@ Rendx 没有内置图编辑功能（节点管理、连线、撤销重做），�
 插件系统的设计目标是**组织代码的边界**，而不是隐藏底层能力：
 
 - `graph-plugin` 用 `createNode` / `createEdge` 管理节点生命周期 — 但 render 函数内部直接使用 `Node.create` / `Group.add` 等引擎原生 API
+- `selection-plugin` 用独立 Layer 绘制选框 overlay — 不修改目标节点本身
+- `drag-plugin` 通过 `app.getPlugin()` 软感知其他插件 — 无硬依赖，单独安装也能工作
 - `grid-plugin` 用引擎原生的 `Layer` + `Node` 画网格 — 没有引入任何网格专用的抽象
 - `history-plugin` 用 `app.toJSON()` / `restoreFromJSON()` 做快照 — 没有自己的序列化格式
 
@@ -108,6 +110,7 @@ Rendx 没有内置图编辑功能（节点管理、连线、撤销重做），�
 - **无隐式行为** — `Node.create('rect', { fill: '#f00' })` 就是创建一个矩形节点。没有自动布局、没有样式继承、没有全局状态注入
 - **线性调用链** — 创建 → 设置属性 → 添加到场景图 → 渲染。每一步的输入/输出都是确定的
 - **类型完备** — TypeScript strict 模式，所有 API 都有精确的类型签名
+- **插件软感知** — 插件间通过 `app.getPlugin()` 运行时探测协作，而不是 import 硬依赖，减少 AI 需要理解的耦合关系
 
 对 AI 来说，能通过类型签名推断出正确调用方式的 API，比需要阅读大量文档才能理解隐式约定的 API，生产力高一个数量级。
 

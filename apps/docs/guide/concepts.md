@@ -98,8 +98,12 @@ Rendx 通过 `Plugin` 接口提供可插拔的功能扩展。插件不创造新�
 ```typescript
 interface Plugin {
   name: string;
+  state?: PluginStateDeclaration[]; // 声明管理的 state keys
+  layers?: PluginLayerDeclaration[]; // 声明需要的渲染层
   install(app: App): void;
   resize?(width: number, height: number): void;
+  serialize?(): Record<string, unknown>;
+  deserialize?(data: Record<string, unknown>): void;
   dispose?(): void;
 }
 
@@ -110,14 +114,17 @@ app.use(myPlugin);
 const plugin = app.getPlugin('name');
 ```
 
+插件可通过 `state` 声明自己管理的状态 key（`app.setState` / `app.getState` 读写），通过 `layers` 声明需要的渲染层（App 自动创建/复用），通过 `app.bus` 事件总线实现插件间通信。
+
 ### 内置插件
 
 | 插件             | 包名                     | 用途                                                 |
 | ---------------- | ------------------------ | ---------------------------------------------------- |
 | Graph Plugin     | `rendx-graph-plugin`     | Node/Edge 生命周期管理、类型注册、依赖追踪、自动分层 |
+| Selection Plugin | `rendx-selection-plugin` | 点击选中、框选、悬停高亮、命中委托                   |
+| Drag Plugin      | `rendx-drag-plugin`      | 拖拽移动、约束系统、多选联动、插件软感知             |
 | Grid Plugin      | `rendx-grid-plugin`      | 点阵网格背景                                         |
 | History Plugin   | `rendx-history-plugin`   | 基于场景快照的撤销/重做                              |
 | Minimap Plugin   | `rendx-minimap-plugin`   | 缩略导航小地图                                       |
-| Selection Plugin | `rendx-selection-plugin` | 点击选中、框选、悬停高亮、命中委托                   |
 
-> 详细用法请参阅 [插件指南](./plugins)。
+> 插件之间无硬依赖，可按需组合。详细用法请参阅 [插件指南](./plugins)。

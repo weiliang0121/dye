@@ -57,6 +57,10 @@ import elementHistoryDemo from './demos/graph-history.js?raw';
 import selectionBasicDemo from './demos/selection-basic.js?raw';
 import selectionGraphDemo from './demos/selection-graph.js?raw';
 
+// --- Plugin: Drag Plugin ---
+import dragBasicDemo from './demos/drag-basic.js?raw';
+import dragGraphDemo from './demos/drag-graph.js?raw';
+
 export interface Demo {
   name: string;
   code: string;
@@ -121,4 +125,8 @@ export const demos: Demo[] = [
   // ── Plugin: Selection Plugin ──
   {name: '选框插件 Selection Basic', code: selectionBasicDemo},
   {name: '选框+图集成 Selection Graph', code: selectionGraphDemo},
+
+  // ── Plugin: Drag Plugin ──
+  {name: '拖拽基础 Drag Basic', code: dragBasicDemo},
+  {name: '拖拽+图集成 Drag Graph', code: dragGraphDemo},
 ];

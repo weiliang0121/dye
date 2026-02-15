@@ -130,6 +130,7 @@ async function runCode() {
     const graphPluginMod = await import('rendx-graph-plugin');
     const historyPlugin = await import('rendx-history-plugin');
     const selectionPlugin = await import('rendx-selection-plugin');
+    const dragPluginMod = await import('rendx-drag-plugin');
     const pathPkg = await import('rendx-path');
     const curvePkg = await import('rendx-curve');
 
@@ -144,6 +145,8 @@ async function runCode() {
       .replace(/import\s+\*\s+as\s+(\w+)\s+from\s*['"]rendx-history-plugin['"]\s*;?/g, 'const $1 = __rendx_history_plugin__;')
       .replace(/import\s*\{([^}]+)\}\s*from\s*['"]rendx-selection-plugin['"]\s*;?/g, 'const {$1} = __rendx_selection_plugin__;')
       .replace(/import\s+\*\s+as\s+(\w+)\s+from\s*['"]rendx-selection-plugin['"]\s*;?/g, 'const $1 = __rendx_selection_plugin__;')
+      .replace(/import\s*\{([^}]+)\}\s*from\s*['"]rendx-drag-plugin['"]\s*;?/g, 'const {$1} = __rendx_drag_plugin__;')
+      .replace(/import\s+\*\s+as\s+(\w+)\s+from\s*['"]rendx-drag-plugin['"]\s*;?/g, 'const $1 = __rendx_drag_plugin__;')
       .replace(/import\s*\{([^}]+)\}\s*from\s*['"]rendx-path['"]\s*;?/g, 'const {$1} = __rendx_path__;')
       .replace(/import\s+\*\s+as\s+(\w+)\s+from\s*['"]rendx-path['"]\s*;?/g, 'const $1 = __rendx_path__;')
       .replace(/import\s*\{([^}]+)\}\s*from\s*['"]rendx-curve['"]\s*;?/g, 'const {$1} = __rendx_curve__;')
@@ -160,6 +163,7 @@ async function runCode() {
       '__rendx_graph_plugin__',
       '__rendx_history_plugin__',
       '__rendx_selection_plugin__',
+      '__rendx_drag_plugin__',
       '__rendx_path__',
       '__rendx_curve__',
       'container',
@@ -168,7 +172,7 @@ async function runCode() {
       `,
     );
 
-    const result = fn(engine, graphPluginMod, historyPlugin, selectionPlugin, pathPkg, curvePkg, containerEl);
+    const result = fn(engine, graphPluginMod, historyPlugin, selectionPlugin, dragPluginMod, pathPkg, curvePkg, containerEl);
 
     // Try to capture the app instance for cleanup
     if (result && typeof result.dispose === 'function') {

@@ -188,6 +188,11 @@ export class SelectionPlugin implements Plugin {
     this.#emitSelectionChange(added, removed);
   }
 
+  /** 刷新 overlay（供外部插件在位置变化后调用） */
+  refreshOverlay() {
+    this.#updateOverlay();
+  }
+
   /** 编程式清空选中 */
   clearSelection() {
     if (!this.#selected.length) return;
