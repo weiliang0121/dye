@@ -76,6 +76,92 @@ export class GraphPlugin implements Plugin, GraphQuery {
     this.#types.clear();
   }
 
+  // ── 序列化 / 反序列化 ──
+
+  /**
+   * 序列化所有元素实例的数据（供 history-plugin 等消费）。
+   * 类型定义（render fn）无法序列化，需要应用层在恢复时保证 register 已调用。
+   */
+  serialize(): Record<string, unknown> {
+    const elements: {typeName: string; data: Record<string, unknown>; layer: string; deps: string[]}[] = [];
+    for (const el of this.#elements.values()) {
+      elements.push({
+        typeName: el.typeName,
+        data: {...el.data},
+        layer: el.layer,
+        deps: [...el.deps],
+      });
+    }
+    return {elements};
+  }
+
+  /**
+   * 从序列化数据恢复所有元素。
+   *
+   * 流程：
+   * 1. 清理当前所有元素和依赖追踪
+   * 2. 从恢复后的场景中移除 restoreFromJSON 反序列化出的静态 Group（它们缺少 ElementImpl 追踪）
+   * 3. 重建 edges/nodes 分组
+   * 4. 使用已注册的类型定义重新创建所有元素（会重新执行 render fn）
+   */
+  deserialize(data: Record<string, unknown>): void {
+    const saved = data as {elements: {typeName: string; data: Record<string, unknown>; layer: string; deps: string[]}[]};
+    if (!saved.elements || !Array.isArray(saved.elements)) return;
+
+    // 1. 清理当前元素（cleanup 回调、内部状态）
+    for (const el of this.#elements.values()) {
+      el.dispose();
+    }
+    this.#elements.clear();
+    this.#dependents.clear();
+
+    // 2. 移除 restoreFromJSON 反序列化出的静态分组
+    const scene = this.#app.scene;
+    for (const layer of scene.layers) {
+      if (layer.isEventLayer) continue;
+      // 逆序遍历 children，找到并移除名为 __graph_edges__ / __graph_nodes__ 的 Group
+      const toRemove: Group[] = [];
+      for (const child of layer.children) {
+        if (child.name === '__graph_edges__' || child.name === '__graph_nodes__') {
+          toRemove.push(child as Group);
+        }
+      }
+      for (const g of toRemove) {
+        layer.remove(g);
+      }
+    }
+
+    // 3. 重建分组
+    this.#edgesGroup = new Group();
+    this.#edgesGroup.setName('__graph_edges__');
+    scene.add(this.#edgesGroup);
+
+    this.#nodesGroup = new Group();
+    this.#nodesGroup.setName('__graph_nodes__');
+    scene.add(this.#nodesGroup);
+
+    // 4. 批量重建元素（先 node 后 edge，保证 edge 的 source/target 已存在）
+    const nodes = saved.elements.filter(e => {
+      const def = this.#types.get(e.typeName);
+      return def?.role === 'node';
+    });
+    const edges = saved.elements.filter(e => {
+      const def = this.#types.get(e.typeName);
+      return def?.role === 'edge';
+    });
+
+    this.batch(() => {
+      for (const elem of [...nodes, ...edges]) {
+        const def = this.#types.get(elem.typeName);
+        if (!def) {
+          console.warn(`[rendx-element-plugin] Cannot restore element: type "${elem.typeName}" not registered`);
+          continue;
+        }
+        this.add(elem.typeName, elem.data as never, {layer: elem.layer, deps: elem.deps});
+      }
+    });
+  }
+
   // ── 类型注册 ──
 
   register(name: string, def: ElementDef): void {
@@ -104,7 +190,7 @@ export class GraphPlugin implements Plugin, GraphQuery {
       deps = options?.deps ?? [];
     }
 
-    const el = new ElementImpl<T>(id, def, data, this, layer, deps, elId => this.notifyUpdate(elId));
+    const el = new ElementImpl<T>(id, type, def, data, this, layer, deps, elId => this.notifyUpdate(elId));
 
     // 挂载到场景
     const targetGroup = layer === 'edges' ? this.#edgesGroup : this.#nodesGroup;

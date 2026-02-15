@@ -15,6 +15,7 @@ import sceneTree from './demos/scene-tree.js?raw';
 import multiLayer from './demos/multi-layer.js?raw';
 import visibilityToggle from './demos/visibility-toggle.js?raw';
 import pointerEvents from './demos/pointer-events.js?raw';
+import solarSystem from './demos/solar-system.js?raw';
 
 // --- Intermediate: Events & Interaction ---
 import interactiveHover from './demos/interactive-hover.js?raw';
@@ -50,6 +51,7 @@ import randomCircles from './demos/random-circles.js?raw';
 // --- Plugin: Element Plugin ---
 import elementPluginDemo from './demos/element-plugin.js?raw';
 import elementLifecycleDemo from './demos/element-lifecycle.js?raw';
+import elementHistoryDemo from './demos/element-history.js?raw';
 
 export interface Demo {
   name: string;
@@ -74,6 +76,7 @@ export const demos: Demo[] = [
   {name: '多图层 Multi-Layer', code: multiLayer},
   {name: '可见性切换 Visibility', code: visibilityToggle},
   {name: '穿透点击 Pointer Events', code: pointerEvents},
+  {name: '太阳系 Solar System', code: solarSystem},
 
   // ── Intermediate: Events & Interaction ──
   {name: '交互悬停 Hover', code: interactiveHover},
@@ -109,4 +112,5 @@ export const demos: Demo[] = [
   // ── Plugin: Element Plugin ──
   {name: '元素插件 Element Plugin', code: elementPluginDemo},
   {name: '元素生命周期 Element Lifecycle', code: elementLifecycleDemo},
+  {name: '元素+历史 Element History', code: elementHistoryDemo},
 ];

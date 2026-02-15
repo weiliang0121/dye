@@ -14,6 +14,8 @@ export class ElementImpl<T = Record<string, unknown>> implements Element<T> {
   readonly group: Group;
   readonly layer: string;
   readonly deps: string[];
+  /** 创建时使用的类型名称（对应 register 的 name），用于序列化 */
+  readonly typeName: string;
 
   #data: T & (NodeBase | EdgeBase);
   #def: ElementDef;
@@ -22,8 +24,9 @@ export class ElementImpl<T = Record<string, unknown>> implements Element<T> {
   #mounted = false;
   #onUpdate: ((id: string) => void) | null;
 
-  constructor(id: string, def: ElementDef, data: T & (NodeBase | EdgeBase), graph: GraphQuery, layer: string, deps: string[], onUpdate?: (id: string) => void) {
+  constructor(id: string, typeName: string, def: ElementDef, data: T & (NodeBase | EdgeBase), graph: GraphQuery, layer: string, deps: string[], onUpdate?: (id: string) => void) {
     this.id = id;
+    this.typeName = typeName;
     this.role = def.role;
     this.#def = def;
     this.#data = {...data};
@@ -77,14 +80,14 @@ export class ElementImpl<T = Record<string, unknown>> implements Element<T> {
       this.#data = merged;
 
       if (positionOnly) {
-        this.group.translate(newData.x - oldData.x, newData.y - oldData.y);
+        this.group.translate(newData.x, newData.y);
         this.#onUpdate?.(this.id);
         return;
       }
 
       // 位置也可能变了，需更新 translate
       if (newData.x !== oldData.x || newData.y !== oldData.y) {
-        this.group.translate(newData.x - oldData.x, newData.y - oldData.y);
+        this.group.translate(newData.x, newData.y);
       }
     } else {
       this.#data = merged;

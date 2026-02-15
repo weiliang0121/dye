@@ -437,7 +437,20 @@ export class App {
 
   /** 序列化所有渲染层的场景图为 JSON，可用于保存/回放 */
   toJSON(): RendxJSON {
-    return serialize(this.scene.layers, this.cfg.width ?? 800, this.cfg.height ?? 600);
+    const json = serialize(this.scene.layers, this.cfg.width ?? 800, this.cfg.height ?? 600);
+
+    // 收集插件状态
+    const pluginsData: Record<string, Record<string, unknown>> = {};
+    for (const plugin of this.#plugins) {
+      if (plugin.serialize) {
+        pluginsData[plugin.name] = plugin.serialize();
+      }
+    }
+    if (Object.keys(pluginsData).length > 0) {
+      json.plugins = pluginsData;
+    }
+
+    return json;
   }
 
   /**
@@ -484,6 +497,16 @@ export class App {
       if (this.#mounted && this.#container) {
         layer.setMatrix(viewMatrix);
         this.#container.insertBefore(layer.renderer.el, this.#eventLayer.renderer.el);
+      }
+    }
+
+    // 恢复插件状态
+    if (json.plugins) {
+      for (const plugin of this.#plugins) {
+        const data = json.plugins[plugin.name];
+        if (data && plugin.deserialize) {
+          plugin.deserialize(data);
+        }
       }
     }
   }

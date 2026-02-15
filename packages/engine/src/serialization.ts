@@ -15,6 +15,8 @@ export interface RendxJSON {
   width: number;
   height: number;
   layers: LayerJSON[];
+  /** 插件序列化数据（key = plugin.name） */
+  plugins?: Record<string, Record<string, unknown>>;
 }
 
 export interface LayerJSON {

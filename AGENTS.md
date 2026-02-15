@@ -49,17 +49,17 @@ Layer 4 (顶层)
 ## 快速上手
 
 ```typescript
-import { App, Node } from 'rendx-engine';
+import {App, Node} from 'rendx-engine';
 
 // 1. 创建引擎
-const app = new App({ width: 800, height: 600 });
+const app = new App({width: 800, height: 600});
 app.mount(document.getElementById('container')!);
 
 // 2. 创建图形节点
-const circle = Node.create('circle', { fill: '#ff0000', stroke: '#333' });
+const circle = Node.create('circle', {fill: '#ff0000', stroke: '#333'});
 circle.shape.from(400, 300, 50); // cx, cy, r
 
-const rect = Node.create('rect', { fill: '#0066ff', opacity: 0.8 });
+const rect = Node.create('rect', {fill: '#0066ff', opacity: 0.8});
 rect.shape.from(100, 100, 200, 150); // x, y, width, height
 
 // 3. 添加到场景
@@ -74,42 +74,52 @@ app.render(); // 静态渲染一帧
 ## 核心设计模式
 
 ### 1. 路径即核心 (Path-Centric)
+
 所有几何形状（circle、rect、sector、area 等）最终都通过 `Path` 类生成 SVG 路径字符串。渲染器通过 `path(d: string)` 方法统一消费路径数据。
 
 ### 2. 接口驱动的渲染器 (Interface-Driven Renderer)
+
 `IGraphicsRenderer` 接口定义了标准渲染 API（save/restore、transform、drawShape、clipPath、gradient），Canvas 和 SVG 各自实现该接口。
 
 ### 3. 场景图模式 (Scene Graph)
+
 `Graphics → Group/Layer → Scene → Node` 层级结构，支持树形遍历、脏标记更新、世界矩阵传播、多 Canvas 分层渲染。
 
 ### 4. Transform 动画系统
+
 `GraphicsTransform`（几何变换动画）、`AttributeTransform`（属性动画）、`ClipBoxTransform`（裁剪动画）通过 fluent API 配置 `duration/delay/easing`，在每帧 `tick()` 时进行插值。
 
 ### 5. 事件委托系统
+
 模拟 DOM 事件流的三阶段模型（capture → target → bubble），包含 enter/leave/over/out 的模拟事件合成。
 
 ## 每个包的详细 API 文档
 
 各包目录下的 `AGENTS.md` 文件包含完整的 API 参考和架构细节：
 
-| 包 | 文档位置 |
-|----|---------|
-| rendx-engine | `packages/engine/AGENTS.md` |
-| rendx-core | `packages/core/AGENTS.md` |
-| rendx-bounding | `packages/bounding/AGENTS.md` |
-| rendx-path | `packages/path/AGENTS.md` |
-| rendx-shape | `packages/shape/AGENTS.md` |
-| rendx-ease | `packages/ease/AGENTS.md` |
-| rendx-curve | `packages/curve/AGENTS.md` |
-| rendx-interpolate | `packages/interpolate/AGENTS.md` |
-| rendx-canvas | `packages/canvas/AGENTS.md` |
-| rendx-svg | `packages/svg/AGENTS.md` |
-| rendx-gradient | `packages/gradient/AGENTS.md` |
-| rendx-dom | `packages/dom/AGENTS.md` |
+| 包                   | 文档位置                            |
+| -------------------- | ----------------------------------- |
+| rendx-engine         | `packages/engine/AGENTS.md`         |
+| rendx-core           | `packages/core/AGENTS.md`           |
+| rendx-bounding       | `packages/bounding/AGENTS.md`       |
+| rendx-path           | `packages/path/AGENTS.md`           |
+| rendx-shape          | `packages/shape/AGENTS.md`          |
+| rendx-ease           | `packages/ease/AGENTS.md`           |
+| rendx-curve          | `packages/curve/AGENTS.md`          |
+| rendx-interpolate    | `packages/interpolate/AGENTS.md`    |
+| rendx-canvas         | `packages/canvas/AGENTS.md`         |
+| rendx-svg            | `packages/svg/AGENTS.md`            |
+| rendx-gradient       | `packages/gradient/AGENTS.md`       |
+| rendx-dom            | `packages/dom/AGENTS.md`            |
+| rendx-element-plugin | `packages/element-plugin/AGENTS.md` |
+| rendx-grid-plugin    | `packages/grid-plugin/AGENTS.md`    |
+| rendx-history-plugin | `packages/history-plugin/AGENTS.md` |
+| rendx-minimap-plugin | `packages/minimap-plugin/AGENTS.md` |
 
 ## 编码规范
 
 ### 命名
+
 - 包名：`rendx-<name>`，全小写，无连字符
 - 类名：PascalCase（`BoundingBox`、`CircleShape`）
 - 函数名：camelCase（`createCircle`、`interpolateColor`）
@@ -118,12 +128,14 @@ app.render(); // 静态渲染一帧
 - 常量：UPPER_SNAKE_CASE（`POINTERENTER`、`DEFAULT_SIZE`）
 
 ### 模块组织
+
 - 每个包入口为 `src/main.ts`，通过 `export * from './xxx'` 聚合导出
 - 依赖使用 `rendx-` scope 前缀引用同仓库包
 - 外部类型导入使用 `import type` 语法
 - 不使用 default export
 
 ### TypeScript
+
 - 严格模式（strict: true）
 - 目标: ES2020
 - 模块解析: bundler
@@ -131,6 +143,7 @@ app.render(); // 静态渲染一帧
 - 使用 `interface` 定义选项（`CircleOptions`、`RendererConfig`）
 
 ### 构建输出
+
 - 入口: `src/main.ts`
 - 输出: `dist/main.js`（ESM）、`dist/main.cjs`（CJS）、`dist/main.d.ts`（类型）
 - 外部依赖: 所有 `rendx-*` 包在 tsup 中标记为 external
@@ -150,12 +163,12 @@ pnpm changeset version  # 更新版本号
 ## 关键类型
 
 ```typescript
-type GF = (...args: any[]) => any;           // 通用函数类型
-type AO = { [key: string]: any };            // 通用对象类型
-type Point = [number, number];               // 2D 坐标点
-type Vec2 = [number, number];                // 2D 向量
+type GF = (...args: any[]) => any; // 通用函数类型
+type AO = {[key: string]: any}; // 通用对象类型
+type Point = [number, number]; // 2D 坐标点
+type Vec2 = [number, number]; // 2D 向量
 type Mat2d = [number, number, number, number, number, number]; // 2D 仿射矩阵
-type Size = { width: number; height: number }; // 尺寸
+type Size = {width: number; height: number}; // 尺寸
 type RGBA = [number, number, number, number]; // 颜色
 ```
 

@@ -10,7 +10,9 @@ dist/
 
 # VitePress cache
 .vitepress/cache/
+**/.vitepress/cache/
 .vitepress/dist/
+**/.vitepress/dist/
 
 # IDE
 .vscode/
