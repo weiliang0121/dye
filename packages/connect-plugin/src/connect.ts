@@ -365,6 +365,7 @@ export class ConnectPlugin implements Plugin {
    * 取消连接
    */
   #cancelConnect() {
+    console.log('cancel');
     this.#hidePreview();
 
     this.#app!.bus.emit('connect:cancel', {
@@ -381,6 +382,7 @@ export class ConnectPlugin implements Plugin {
     this.#app!.resetCursor();
     this.#app!.setState('connect:connecting', false);
     this.#app!.setState('connect:source', null);
+    console.log('cleanupState', this.#overlayLayer?.display, this.#app?.scene);
     this.#app!.requestRender();
     this.#reset();
   }
