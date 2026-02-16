@@ -513,6 +513,7 @@ export class SelectionPlugin implements Plugin {
       // 自定义 overlay → 优先使用
       const custom = this.#opts.renderOverlay?.(target, 'selection');
       if (custom) {
+        this.#inheritTargetTransform(custom, target);
         this.#boxGroup!.add(custom);
         continue;
       }
@@ -536,6 +537,7 @@ export class SelectionPlugin implements Plugin {
       // 自定义 overlay → 优先使用
       const custom = this.#opts.renderOverlay?.(this.#hovering, 'hover');
       if (custom) {
+        this.#inheritTargetTransform(custom, this.#hovering);
         this.#hoverGroup!.add(custom);
       } else {
         const bbox = getWorldBBox(this.#hovering);
@@ -554,6 +556,28 @@ export class SelectionPlugin implements Plugin {
   // ════════════════════════════════════════════════════════════
   //  Internal — 工具方法
   // ════════════════════════════════════════════════════════════
+
+  /**
+   * 将 target 的 worldMatrix 复制到自定义 overlay 节点上。
+   *
+   * 自定义 overlay（如 edge 路径高亮）的 shape 数据使用场景局部坐标，
+   * 需要 target 的完整 worldMatrix（含 scene 缩放/平移）来正确变换到屏幕空间。
+   * 由于 selection layer 设置了 independentTransform，overlay 的 parent chain
+   * worldMatrix 为 identity，因此 overlay.matrix = target.worldMatrix 即可使
+   * overlay.worldMatrix = target.worldMatrix。
+   */
+  #inheritTargetTransform(overlay: Graphics, target: Graphics) {
+    const m = target.worldMatrix;
+    const om = overlay.matrix;
+    om[0] = m[0];
+    om[1] = m[1];
+    om[2] = m[2];
+    om[3] = m[3];
+    om[4] = m[4];
+    om[5] = m[5];
+    overlay.needUpdate = false;
+    overlay.worldMatrixNeedUpdate = true;
+  }
 
   /**
    * 检测其他交互插件是否正忙（连线中 / 拖拽中）。
