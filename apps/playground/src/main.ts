@@ -132,6 +132,7 @@ async function runCode() {
     const selectionPlugin = await import('rendx-selection-plugin');
     const dragPluginMod = await import('rendx-drag-plugin');
     const connectPluginMod = await import('rendx-connect-plugin');
+    const zoomPluginMod = await import('rendx-zoom-plugin');
     const pathPkg = await import('rendx-path');
     const curvePkg = await import('rendx-curve');
 
@@ -150,6 +151,8 @@ async function runCode() {
       .replace(/import\s+\*\s+as\s+(\w+)\s+from\s*['"]rendx-drag-plugin['"]\s*;?/g, 'const $1 = __rendx_drag_plugin__;')
       .replace(/import\s*\{([^}]+)\}\s*from\s*['"]rendx-connect-plugin['"]\s*;?/g, 'const {$1} = __rendx_connect_plugin__;')
       .replace(/import\s+\*\s+as\s+(\w+)\s+from\s*['"]rendx-connect-plugin['"]\s*;?/g, 'const $1 = __rendx_connect_plugin__;')
+      .replace(/import\s*\{([^}]+)\}\s*from\s*['"]rendx-zoom-plugin['"]\s*;?/g, 'const {$1} = __rendx_zoom_plugin__;')
+      .replace(/import\s+\*\s+as\s+(\w+)\s+from\s*['"]rendx-zoom-plugin['"]\s*;?/g, 'const $1 = __rendx_zoom_plugin__;')
       .replace(/import\s*\{([^}]+)\}\s*from\s*['"]rendx-path['"]\s*;?/g, 'const {$1} = __rendx_path__;')
       .replace(/import\s+\*\s+as\s+(\w+)\s+from\s*['"]rendx-path['"]\s*;?/g, 'const $1 = __rendx_path__;')
       .replace(/import\s*\{([^}]+)\}\s*from\s*['"]rendx-curve['"]\s*;?/g, 'const {$1} = __rendx_curve__;')
@@ -168,6 +171,7 @@ async function runCode() {
       '__rendx_selection_plugin__',
       '__rendx_drag_plugin__',
       '__rendx_connect_plugin__',
+      '__rendx_zoom_plugin__',
       '__rendx_path__',
       '__rendx_curve__',
       'container',
@@ -176,7 +180,7 @@ async function runCode() {
       `,
     );
 
-    const result = fn(engine, graphPluginMod, historyPlugin, selectionPlugin, dragPluginMod, connectPluginMod, pathPkg, curvePkg, containerEl);
+    const result = fn(engine, graphPluginMod, historyPlugin, selectionPlugin, dragPluginMod, connectPluginMod, zoomPluginMod, pathPkg, curvePkg, containerEl);
 
     // Try to capture the app instance for cleanup
     if (result && typeof result.dispose === 'function') {

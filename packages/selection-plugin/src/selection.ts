@@ -242,6 +242,9 @@ export class SelectionPlugin implements Plugin {
       return;
     }
 
+    // 连线进行中 → 跳过（connect-plugin 互斥）
+    if (this.#isConnectActive()) return;
+
     const hit = this.#resolve(e.target);
 
     if (!hit) {
@@ -276,6 +279,9 @@ export class SelectionPlugin implements Plugin {
   };
 
   #onPointerMove = (e: SimulatedEvent) => {
+    // 连线进行中 → 跳过（connect-plugin 互斥）
+    if (this.#isConnectActive()) return;
+
     // ── 框选拖拽中 ──
     if (this.#isDragging && this.#dragStartOffset) {
       this.#lastDragOffset = [e.offsetX, e.offsetY];
@@ -322,6 +328,9 @@ export class SelectionPlugin implements Plugin {
   };
 
   #onPointerDown = (e: SimulatedEvent) => {
+    // 连线进行中 → 跳过框选（connect-plugin 互斥）
+    if (this.#isConnectActive()) return;
+
     // 仅空白区域开始框选
     const hit = this.#resolve(e.target);
     if (hit) return;
@@ -476,6 +485,19 @@ export class SelectionPlugin implements Plugin {
   // ════════════════════════════════════════════════════════════
   //  Internal — 工具方法
   // ════════════════════════════════════════════════════════════
+
+  /**
+   * 检测 connect-plugin 是否正在连接中。
+   * 通过 app 全局 state 软感知，无硬依赖。
+   */
+  #isConnectActive(): boolean {
+    if (!this.#app) return false;
+    try {
+      return this.#app.getState<boolean>('connect:connecting') === true;
+    } catch {
+      return false;
+    }
+  }
 
   /** 通过 hitDelegate + filter 解析真正的选中目标 */
   #resolve(target: Graphics): Graphics | null {

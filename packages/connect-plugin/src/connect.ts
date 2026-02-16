@@ -73,6 +73,9 @@ export class ConnectPlugin implements Plugin {
   /** 当前吸附的目标 */
   #snapTarget: Graphics | null = null;
 
+  /** 当前 hover 的可连接端口（用于 idle cursor 反馈） */
+  #hoveringPort: Graphics | null = null;
+
   /** 预览线 Node */
   #previewLine: EngineNode | null = null;
 
@@ -279,6 +282,7 @@ export class ConnectPlugin implements Plugin {
     this.#source = source;
     this.#sourceAnchor = this.#getAnchor(source);
     this.#state = ConnectState.Connecting;
+    this.#hoveringPort = null; // 清除 idle hover 状态
 
     this.#app!.setCursor(this.#opts.cursor);
     this.#app!.setState('connect:connecting', true);
@@ -295,13 +299,32 @@ export class ConnectPlugin implements Plugin {
   };
 
   #onPointerMove = (e: SimulatedEvent) => {
-    if (this.#state !== ConnectState.Connecting) return;
+    if (this.#state !== ConnectState.Connecting) {
+      // ── Idle 状态：hover 到可连接端口时显示 crosshair ──
+      const connectable = this.#resolveConnectable(e.target);
+      if (connectable) {
+        if (!this.#hoveringPort) {
+          this.#hoveringPort = connectable;
+          this.#app!.setCursor(this.#opts.cursor);
+        }
+      } else if (this.#hoveringPort) {
+        this.#hoveringPort = null;
+        this.#app!.resetCursor();
+      }
+      return;
+    }
 
     const worldX = e.worldX;
     const worldY = e.worldY;
 
     // 扫描吸附目标
+    const prevSnap = this.#snapTarget;
     this.#snapTarget = this.#findSnapTarget(worldX, worldY);
+
+    // 吸附目标变化 → 更新光标
+    if (this.#snapTarget !== prevSnap) {
+      this.#app!.setCursor(this.#snapTarget ? 'cell' : this.#opts.cursor);
+    }
 
     // 更新预览线终点
     let endX = worldX;
@@ -365,7 +388,6 @@ export class ConnectPlugin implements Plugin {
    * 取消连接
    */
   #cancelConnect() {
-    console.log('cancel');
     this.#hidePreview();
 
     this.#app!.bus.emit('connect:cancel', {
@@ -382,7 +404,6 @@ export class ConnectPlugin implements Plugin {
     this.#app!.resetCursor();
     this.#app!.setState('connect:connecting', false);
     this.#app!.setState('connect:source', null);
-    console.log('cleanupState', this.#overlayLayer?.display, this.#app?.scene);
     this.#app!.requestRender();
     this.#reset();
   }

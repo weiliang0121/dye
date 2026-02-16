@@ -143,6 +143,7 @@ class ZoomPlugin implements Plugin {
     scene.scale(zoom, zoom);
 
     this.#zoom = zoom;
+    this.#markLayersDirty();
     this.#app.render();
     this.#emitChange();
   }
@@ -175,6 +176,7 @@ class ZoomPlugin implements Plugin {
   panBy(dx: number, dy: number) {
     if (!this.#app) return;
     this.#app.scene.translateXY(dx, dy);
+    this.#markLayersDirty();
     this.#app.render();
     this.#emitChange();
   }
@@ -188,6 +190,7 @@ class ZoomPlugin implements Plugin {
     scene.translate(0, 0);
     scene.scale(1, 1);
     this.#zoom = 1;
+    this.#markLayersDirty();
     this.#app.render();
     this.#emitChange();
   }
@@ -243,6 +246,7 @@ class ZoomPlugin implements Plugin {
     scene.translate(targetTx, targetTy);
     scene.scale(zoom, zoom);
     this.#zoom = zoom;
+    this.#markLayersDirty();
     this.#app.render();
     this.#emitChange();
   }
@@ -250,6 +254,19 @@ class ZoomPlugin implements Plugin {
   /** 判断是否正在平移 */
   isPanning(): boolean {
     return this.#isPanning || this.#middleButtonPanning;
+  }
+
+  /**
+   * 场景变换后，标记所有层脏 + worldMatrix 需更新。
+   * Scene.translate/scale 只设置 Scene.needUpdate，不会自动传播到 Layer。
+   * 必须手动标记才能让 layer.sign() 返回 true → 触发重绘。
+   */
+  #markLayersDirty() {
+    const scene = this.#app!.scene;
+    for (const layer of scene.layers) {
+      layer.worldMatrixNeedUpdate = true;
+      layer.setDirty(true);
+    }
   }
 
   // ════════════════════════════════════════════

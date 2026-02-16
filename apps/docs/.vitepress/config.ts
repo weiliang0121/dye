@@ -33,10 +33,11 @@ export default defineConfig({
           {text: 'rendx-selection-plugin', link: '/packages/selection-plugin'},
           {text: 'rendx-drag-plugin', link: '/packages/drag-plugin'},
           {text: 'rendx-connect-plugin', link: '/packages/connect-plugin'},
+          {text: 'rendx-zoom-plugin', link: '/packages/zoom-plugin'},
         ],
       },
       {text: 'Playground', link: '/playground'},
-      {text: 'Graph Editor', link: 'https://weiliang0121.github.io/rendx/playground/editor.html'},
+      {text: 'Graph Editor', link: '/guide/graph-editor'},
     ],
 
     sidebar: {
@@ -49,6 +50,7 @@ export default defineConfig({
             {text: '核心概念', link: '/guide/concepts'},
             {text: '架构总览', link: '/guide/architecture'},
             {text: '插件指南', link: '/guide/plugins'},
+            {text: 'Graph Editor', link: '/guide/graph-editor'},
           ],
         },
       ],

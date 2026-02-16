@@ -65,6 +65,9 @@ import dragGraphDemo from './demos/drag-graph.js?raw';
 import connectBasicDemo from './demos/connect-basic.js?raw';
 import connectGraphDemo from './demos/connect-graph.js?raw';
 
+// --- Plugin: Zoom Plugin ---
+import zoomBasicDemo from './demos/zoom-basic.js?raw';
+
 export interface Demo {
   name: string;
   code: string;
@@ -137,4 +140,7 @@ export const demos: Demo[] = [
   // ── Plugin: Connect Plugin ──
   {name: '连线基础 Connect Basic', code: connectBasicDemo},
   {name: '连线+图集成 Connect Graph', code: connectGraphDemo},
+
+  // ── Plugin: Zoom Plugin ──
+  {name: '缩放平移 Zoom Basic', code: zoomBasicDemo},
 ];

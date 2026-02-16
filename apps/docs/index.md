@@ -13,7 +13,7 @@ hero:
       link: /playground
     - theme: alt
       text: Graph Editor
-      link: https://weiliang0121.github.io/rendx/playground/editor.html
+      link: /guide/graph-editor
     - theme: alt
       text: API 参考
       link: /api/engine
