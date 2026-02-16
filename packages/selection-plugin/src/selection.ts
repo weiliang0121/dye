@@ -575,8 +575,18 @@ export class SelectionPlugin implements Plugin {
     om[3] = m[3];
     om[4] = m[4];
     om[5] = m[5];
+    // 直接设置 worldMatrix —— parent.update() 的传播会将 child.worldMatrixNeedUpdate
+    // 覆盖为 false（因为 parent 自身 needUpdateWorldMatrix 为 false），导致
+    // #updateWorldMatrix() 永远不执行。必须在此处直接赋值。
+    const wm = overlay.worldMatrix;
+    wm[0] = m[0];
+    wm[1] = m[1];
+    wm[2] = m[2];
+    wm[3] = m[3];
+    wm[4] = m[4];
+    wm[5] = m[5];
     overlay.needUpdate = false;
-    overlay.worldMatrixNeedUpdate = true;
+    overlay.worldMatrixNeedUpdate = false;
   }
 
   /**
