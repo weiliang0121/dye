@@ -367,7 +367,10 @@ export class DragPlugin implements Plugin {
         if (selected && Array.isArray(selected) && selected.length > 0) {
           // 命中节点在选中集中 → 拖拽整个选中集
           if (selected.includes(hit)) {
-            return [...selected];
+            // 对选中集合应用 filter，排除不可拖拽的元素（如 edge）
+            // 避免 edge group 被施加 translate 导致渲染错位
+            const filtered = this.#opts.filter ? selected.filter(t => this.#opts.filter!(t)) : [...selected];
+            return filtered.length > 0 ? filtered : [hit];
           }
         }
       } catch {
